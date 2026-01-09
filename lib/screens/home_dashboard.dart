@@ -156,7 +156,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
         width: 200,
         height: 60,
         decoration: BoxDecoration(
-          color: widget.isConnected ? AppColors.surface : AppColors.primary,
+          color: widget.isConnected ? AppColors.surface : AppColors.accent,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
              color: widget.isConnected ? AppColors.border : Colors.transparent,

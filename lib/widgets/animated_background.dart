@@ -11,7 +11,7 @@ class AnimatedMeshBackground extends StatelessWidget {
       children: [
         // Simple static background
         Container(color: AppColors.background),
-        widget.child,
+        child,
       ],
     );
   }
