@@ -29,16 +29,90 @@ class V2rayService {
       return await V2rayServiceWindows().connect(node);
     }
     try {
-      final config = node.toV2rayConfig();
+      // 生成完整的 Xray 配置（包含 inbounds 和 outbounds）
+      final fullConfig = _buildFullXrayConfig(node);
+      final configJson = jsonEncode(fullConfig);
+      
+      print('[V2rayService] Connecting to ${node.name} (${node.protocol})');
+      print('[V2rayService] Config: $configJson');
+      
       final result = await _channel.invokeMethod<bool>(
         'connect',
-        {'config': jsonEncode(config)},
+        {'config': configJson},
       );
+      
+      if (result == true) {
+        print('[V2rayService] Connection initiated successfully');
+      } else {
+        print('[V2rayService] Connection failed: result is false');
+      }
+      
       return result ?? false;
-    } on PlatformException catch (_) {
-
+    } on PlatformException catch (e) {
+      print('[V2rayService] PlatformException: ${e.code} - ${e.message}');
+      print('[V2rayService] Details: ${e.details}');
+      return false;
+    } catch (e) {
+      print('[V2rayService] Error: $e');
       return false;
     }
+  }
+  
+  /// 构建完整的 Xray 配置（包含 inbounds 和 outbounds）
+  Map<String, dynamic> _buildFullXrayConfig(ServerNode node) {
+    final outbound = node.toV2rayConfig();
+    
+    return {
+      'log': {
+        'loglevel': 'warning',
+      },
+      'inbounds': [
+        {
+          'tag': 'socks',
+          'port': 10808,
+          'protocol': 'socks',
+          'settings': {
+            'auth': 'noauth',
+            'udp': true,
+            'ip': '127.0.0.1',
+          },
+          'sniffing': {
+            'enabled': true,
+            'destOverride': ['http', 'tls'],
+          },
+        },
+        {
+          'tag': 'http',
+          'port': 10809,
+          'protocol': 'http',
+          'settings': {
+            'userLevel': 8,
+          },
+        },
+      ],
+      'outbounds': [
+        outbound,
+        {
+          'tag': 'direct',
+          'protocol': 'freedom',
+        },
+      ],
+      'routing': {
+        'domainStrategy': 'IPIfNonMatch',
+        'rules': [
+          {
+            'type': 'field',
+            'ip': ['geoip:private', 'geoip:cn'],
+            'outboundTag': 'direct',
+          },
+          {
+            'type': 'field',
+            'domain': ['geosite:cn'],
+            'outboundTag': 'direct',
+          },
+        ],
+      },
+    };
   }
 
   /// 断开连接
@@ -47,10 +121,15 @@ class V2rayService {
       return await V2rayServiceWindows().disconnect();
     }
     try {
+      print('[V2rayService] Disconnecting...');
       final result = await _channel.invokeMethod<bool>('disconnect');
+      print('[V2rayService] Disconnect result: $result');
       return result ?? false;
-    } on PlatformException catch (_) {
-
+    } on PlatformException catch (e) {
+      print('[V2rayService] Disconnect PlatformException: ${e.code} - ${e.message}');
+      return false;
+    } catch (e) {
+      print('[V2rayService] Disconnect error: $e');
       return false;
     }
   }
@@ -63,7 +142,11 @@ class V2rayService {
     try {
       final result = await _channel.invokeMethod<bool>('isConnected');
       return result ?? false;
-    } on PlatformException catch (_) {
+    } on PlatformException catch (e) {
+      print('[V2rayService] isConnected PlatformException: ${e.code} - ${e.message}');
+      return false;
+    } catch (e) {
+      print('[V2rayService] isConnected error: $e');
       return false;
     }
   }

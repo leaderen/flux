@@ -85,18 +85,48 @@ jobs:
         env:
           FLUTTER_BUILD_MODE: ${{ github.event.inputs.build_mode || 'release' }}
       
+      - name: Check for PacketTunnel target
+        working-directory: ios
+        run: |
+          # 检查是否存在 PacketTunnel scheme
+          if xcodebuild -workspace Runner.xcworkspace -list | grep -q "PacketTunnel"; then
+            echo "PACKETTUNNEL_EXISTS=true" >> $GITHUB_ENV
+            echo "PacketTunnel target found"
+          else
+            echo "PACKETTUNNEL_EXISTS=false" >> $GITHUB_ENV
+            echo "PacketTunnel target not found (this is OK if not yet configured)"
+          fi
+      
       - name: Create Xcode Archive
         working-directory: ios
         run: |
-          xcodebuild clean archive \
-            -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration ${{ github.event.inputs.build_mode == 'debug' && 'Debug' || 'Release' }} \
-            -archivePath build/Runner.xcarchive \
-            -allowProvisioningUpdates \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+          BUILD_CONFIG=${{ github.event.inputs.build_mode == 'debug' && 'Debug' || 'Release' }}
+          
+          # 如果存在 PacketTunnel，需要同时构建两个 target
+          if [ "$PACKETTUNNEL_EXISTS" = "true" ]; then
+            echo "Building with PacketTunnel extension..."
+            xcodebuild clean archive \
+              -workspace Runner.xcworkspace \
+              -scheme Runner \
+              -configuration $BUILD_CONFIG \
+              -archivePath build/Runner.xcarchive \
+              -allowProvisioningUpdates \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              -derivedDataPath build/DerivedData
+          else
+            echo "Building without PacketTunnel extension..."
+            xcodebuild clean archive \
+              -workspace Runner.xcworkspace \
+              -scheme Runner \
+              -configuration $BUILD_CONFIG \
+              -archivePath build/Runner.xcarchive \
+              -allowProvisioningUpdates \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO
+          fi
       
       - name: Create unsigned IPA from .app
         run: |
@@ -105,6 +135,15 @@ jobs:
           
           # 复制 .app 到 Payload 目录
           cp -r build/ios/iphoneos/Runner.app build/ipa/Payload/
+          
+          # 如果存在 PacketTunnel extension，也需要复制
+          if [ "$PACKETTUNNEL_EXISTS" = "true" ]; then
+            echo "Checking for PacketTunnel extension..."
+            if [ -d "build/ios/iphoneos/PacketTunnel.appex" ]; then
+              echo "Found PacketTunnel extension, copying to Runner.app..."
+              cp -r build/ios/iphoneos/PacketTunnel.appex build/ipa/Payload/Runner.app/PlugIns/ 2>/dev/null || echo "Extension copy may have failed (this is OK for unsigned builds)"
+            fi
+          fi
           
           # 创建 IPA 文件（ZIP 格式）
           cd build/ipa

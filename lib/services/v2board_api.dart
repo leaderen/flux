@@ -151,6 +151,11 @@ class V2BoardApi {
     return _get('/user/order/getPaymentMethod');
   }
 
+  /// 获取订单列表
+  Future<Map<String, dynamic>> fetchOrderList() async {
+    return _get('/user/order/fetch');
+  }
+
   /// 取消订单
   Future<Map<String, dynamic>> cancelOrder(String tradeNo) async {
     return _post('/user/order/cancel', {

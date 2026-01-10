@@ -104,15 +104,42 @@ jobs:
           CODE_SIGN_IDENTITY: ${{ secrets.IOS_CODE_SIGN_IDENTITY }}
           PROVISIONING_PROFILE_SPECIFIER: ${{ secrets.IOS_PROVISIONING_PROFILE_SPECIFIER }}
       
+      - name: Check for PacketTunnel target
+        working-directory: ios
+        run: |
+          # 检查是否存在 PacketTunnel scheme
+          if xcodebuild -workspace Runner.xcworkspace -list | grep -q "PacketTunnel"; then
+            echo "PACKETTUNNEL_EXISTS=true" >> $GITHUB_ENV
+            echo "PacketTunnel target found"
+          else
+            echo "PACKETTUNNEL_EXISTS=false" >> $GITHUB_ENV
+            echo "PacketTunnel target not found (this is OK if not yet configured)"
+          fi
+      
       - name: Create Xcode Archive
         working-directory: ios
         run: |
-          xcodebuild clean archive \
-            -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration ${{ github.event.inputs.build_mode == 'debug' && 'Debug' || 'Release' }} \
-            -archivePath build/Runner.xcarchive \
-            -allowProvisioningUpdates
+          BUILD_CONFIG=${{ github.event.inputs.build_mode == 'debug' && 'Debug' || 'Release' }}
+          
+          # 如果存在 PacketTunnel，需要同时构建两个 target
+          if [ "$PACKETTUNNEL_EXISTS" = "true" ]; then
+            echo "Building with PacketTunnel extension..."
+            xcodebuild clean archive \
+              -workspace Runner.xcworkspace \
+              -scheme Runner \
+              -configuration $BUILD_CONFIG \
+              -archivePath build/Runner.xcarchive \
+              -allowProvisioningUpdates \
+              -derivedDataPath build/DerivedData
+          else
+            echo "Building without PacketTunnel extension..."
+            xcodebuild clean archive \
+              -workspace Runner.xcworkspace \
+              -scheme Runner \
+              -configuration $BUILD_CONFIG \
+              -archivePath build/Runner.xcarchive \
+              -allowProvisioningUpdates
+          fi
         env:
           CODE_SIGN_IDENTITY: ${{ secrets.IOS_CODE_SIGN_IDENTITY }}
           PROVISIONING_PROFILE_SPECIFIER: ${{ secrets.IOS_PROVISIONING_PROFILE_SPECIFIER }}

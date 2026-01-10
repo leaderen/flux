@@ -114,17 +114,38 @@ class _RootShellState extends State<RootShell> with WindowListener {
   
   void _onVpnStatusChanged(bool isConnected) {
     if (!mounted) return;
-    // 只处理从连接变为断开的情况（VPN 被后台杀死）
-    if (!isConnected && _status == ShellStatus.connected) {
-      setState(() {
-        _status = ShellStatus.disconnected;
-        _statusMessage = 'VPN 已断开';
-      });
-    } else if (isConnected && _status != ShellStatus.connected) {
-      setState(() {
-        _status = ShellStatus.connected;
-        _statusMessage = '已连接';
-      });
+    
+    print('[RootShell] VPN status changed: $isConnected, current status: $_status');
+    
+    // 处理连接状态变化
+    if (isConnected) {
+      // 连接成功
+      if (_status == ShellStatus.connecting) {
+        setState(() {
+          _status = ShellStatus.connected;
+          _statusMessage = '已连接';
+        });
+      } else if (_status != ShellStatus.connected) {
+        setState(() {
+          _status = ShellStatus.connected;
+          _statusMessage = '已连接';
+        });
+      }
+    } else {
+      // 断开连接
+      if (_status == ShellStatus.connecting) {
+        // 连接失败
+        setState(() {
+          _status = ShellStatus.error;
+          _statusMessage = '连接失败，请检查配置或网络';
+        });
+      } else if (_status == ShellStatus.connected) {
+        // VPN 被后台杀死
+        setState(() {
+          _status = ShellStatus.disconnected;
+          _statusMessage = 'VPN 已断开';
+        });
+      }
     }
   }
 
@@ -246,17 +267,27 @@ class _RootShellState extends State<RootShell> with WindowListener {
         _statusMessage = '正在连接 ${bestNode.name}...';
       });
 
+      print('[RootShell] Attempting to connect to ${bestNode.name} (${bestNode.protocol})');
+      
       final success = await _vpnService.connect(bestNode).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => false,
+        const Duration(seconds: 15),
+        onTimeout: () {
+          print('[RootShell] Connection timeout');
+          return false;
+        },
       );
 
-      setState(() {
-        _status = success ? ShellStatus.connected : ShellStatus.error;
-        _statusMessage = success
-            ? '已连接 ${bestNode.name}'
-            : '连接失败';
-      });
+      print('[RootShell] Connection result: $success');
+      
+      // 如果连接返回 true，说明连接已启动，等待状态流更新
+      // 如果返回 false，说明连接失败
+      if (!success) {
+        setState(() {
+          _status = ShellStatus.error;
+          _statusMessage = '连接失败，请检查日志或重试';
+        });
+      }
+      // 如果 success 为 true，状态会通过 _onVpnStatusChanged 更新
     } catch (e) {
       setState(() {
         _status = ShellStatus.error;

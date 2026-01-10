@@ -37,6 +37,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   List<PaymentMethod>? _cachedMethods;
 
   bool _isPolling = false;
+  String? _unpaidTradeNo; // 未支付订单号
 
   @override
   void initState() {
@@ -44,6 +45,32 @@ class _OrdersScreenState extends State<OrdersScreen> {
     _loadMethodsData();
     final allowed = _availablePeriods(widget.selectedPlan);
     _period = allowed.isNotEmpty ? allowed.first : 'month_price';
+    _checkUnpaidOrder();
+  }
+
+  /// 检查是否有未支付订单
+  Future<void> _checkUnpaidOrder() async {
+    try {
+      final result = await _api.fetchOrderList();
+      final orders = result['data'] as List?;
+      if (orders != null && orders.isNotEmpty) {
+        // 查找未支付订单（status == 0）
+        for (var order in orders) {
+          if (order is Map && order['status'] == 0) {
+            final tradeNo = order['trade_no']?.toString();
+            if (tradeNo != null && tradeNo.isNotEmpty) {
+              setState(() {
+                _unpaidTradeNo = tradeNo;
+              });
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // 忽略错误，不影响主流程
+      print('[OrdersScreen] Failed to check unpaid order: $e');
+    }
   }
 
   @override
@@ -155,6 +182,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
       final unpaidTradeNo = _extractUnpaidTradeNo(errorMsg);
       
       if (unpaidTradeNo != null && mounted) {
+        // 更新未支付订单号
+        setState(() {
+          _unpaidTradeNo = unpaidTradeNo;
+        });
         // 显示继续支付/取消订单对话框
         await _showUnpaidOrderDialog(unpaidTradeNo);
       } else if (mounted) {
@@ -240,7 +271,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
     try {
       await _api.cancelOrder(tradeNo);
       if (mounted) {
-        setState(() => _message = '订单已取消，请重新购买');
+        setState(() {
+          _message = '订单已取消，请重新购买';
+          _unpaidTradeNo = null; // 清除未支付订单号
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -250,6 +284,44 @@ class _OrdersScreenState extends State<OrdersScreen> {
       if (mounted) {
         setState(() => _loading = false);
       }
+    }
+  }
+
+  /// 处理取消未支付订单
+  Future<void> _handleCancelUnpaidOrder() async {
+    if (_unpaidTradeNo == null) return;
+    
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '确认取消订单',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+        content: Text(
+          '订单号: $_unpaidTradeNo\n\n确定要取消此订单吗？取消后可以重新下单。',
+          style: TextStyle(color: Colors.white.withOpacity(0.8)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              '确认取消',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed == true && _unpaidTradeNo != null) {
+      await _cancelOrder(_unpaidTradeNo!);
     }
   }
 
@@ -479,6 +551,37 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     controller: _couponController,
                     decoration: const InputDecoration(labelText: '优惠券（可选）'),
                   ),
+                  // 显示未支付订单提示和取消按钮
+                  if (_unpaidTradeNo != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '您有未支付订单: ${_unpaidTradeNo!.substring(0, _unpaidTradeNo!.length > 8 ? 8 : _unpaidTradeNo!.length)}...',
+                              style: const TextStyle(color: Colors.orange, fontSize: 12),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: _loading ? null : () => _handleCancelUnpaidOrder(),
+                            child: const Text(
+                              '取消订单',
+                              style: TextStyle(color: Colors.red, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   Center(
                     child: GlowButton(
