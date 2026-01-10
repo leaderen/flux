@@ -81,11 +81,12 @@ class VPNManager: NSObject {
                     print("[VPNManager] ✅ Manager loaded, proceeding with connection")
                     self._doConnect(manager: manager, config: config, result: result)
                 } else {
+                    let errorMsg = "VPN Manager not loaded yet. Please try again. Extension ID: \(self.extensionBundleId)"
                     print("[VPNManager] ❌ Manager still not available after 2 seconds")
                     result(FlutterError(
                         code: "MANAGER_NOT_READY",
-                        message: "VPN Manager not loaded yet. Please try again.",
-                        details: "Extension ID: \(self.extensionBundleId)"
+                        message: errorMsg,
+                        details: ["extension_id": self.extensionBundleId, "error": "Manager not loaded"]
                     ))
                 }
             }
@@ -187,13 +188,19 @@ class VPNManager: NSObject {
             }
         } catch {
             let errorMsg = error.localizedDescription
+            let errorType = String(describing: type(of: error))
             print("[VPNManager] ❌ Start error: \(errorMsg)")
-            print("[VPNManager] ❌ Error type: \(type(of: error))")
+            print("[VPNManager] ❌ Error type: \(errorType)")
             print("[VPNManager] ❌ Error details: \(error)")
             
             // 检查是否是 extension 不存在的问题
             let errorLower = errorMsg.lowercased()
+            var errorCode = "START_ERROR"
+            var detailedMessage = errorMsg
+            
             if errorLower.contains("extension") || errorLower.contains("bundle") || errorLower.contains("not found") || errorLower.contains("unable to find") {
+                errorCode = "EXTENSION_NOT_FOUND"
+                detailedMessage = "PacketTunnel extension may not be configured. Extension ID: \(extensionId)"
                 print("[VPNManager] ⚠️⚠️⚠️ CRITICAL: PacketTunnel extension may not be configured in Xcode")
                 print("[VPNManager] ⚠️ Please ensure:")
                 print("[VPNManager]    1. PacketTunnel target exists in Xcode project")
@@ -202,9 +209,14 @@ class VPNManager: NSObject {
             }
             
             result(FlutterError(
-                code: "START_ERROR",
-                message: errorMsg,
-                details: "Extension ID: \(extensionId). Please check if PacketTunnel target exists in Xcode."
+                code: errorCode,
+                message: detailedMessage,
+                details: [
+                    "extension_id": extensionId,
+                    "error_type": errorType,
+                    "error_description": errorMsg,
+                    "suggestion": "Please check if PacketTunnel target exists in Xcode"
+                ]
             ))
         }
     }

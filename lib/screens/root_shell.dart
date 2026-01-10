@@ -266,22 +266,59 @@ class _RootShellState extends State<RootShell> with WindowListener {
         _statusMessage = '正在测试节点延迟...';
       });
 
+      final logger = LoggerService();
+      await logger.info('RootShell', 'Testing latency for ${nodes.length} nodes...');
+
       // 异步测试延迟，限制测试时间
-      await _latencyService.testNodesLatency(nodes).timeout(
+      int testedCount = 0;
+      await _latencyService.testNodesLatency(nodes, onProgress: (node, latency) {
+        testedCount++;
+        if (latency != null) {
+          logger.debug('RootShell', 'Node ${node.name}: ${latency}ms');
+        } else {
+          logger.debug('RootShell', 'Node ${node.name}: timeout/failed');
+        }
+      }).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          // 超时后继续使用第一个节点
+          logger.warning('RootShell', 'Latency test timeout after 10s, tested $testedCount/${nodes.length} nodes');
         },
       );
       
-      final bestNode = _latencyService.findBestNode(nodes) ?? nodes.first;
+      // 获取最佳节点和选择原因
+      final bestNodeResult = _latencyService.findBestNodeWithReason(nodes);
+      if (bestNodeResult == null) {
+        await logger.error('RootShell', 'No nodes available');
+        setState(() {
+          _status = ShellStatus.error;
+          _statusMessage = '没有可用节点';
+        });
+        return;
+      }
+      
+      final bestNode = bestNodeResult['node'] as ServerNode;
+      final reason = bestNodeResult['reason'] as String;
+      final totalNodes = bestNodeResult['total_nodes'] as int;
+      final testedNodes = bestNodeResult['tested_nodes'] as int? ?? 0;
+      
+      // 记录节点选择信息
+      String selectionInfo = 'Selected: ${bestNode.name} (${bestNode.protocol})';
+      selectionInfo += '\nReason: $reason';
+      selectionInfo += '\nTotal nodes: $totalNodes, Tested: $testedNodes';
+      if (bestNodeResult['latency'] != null) {
+        selectionInfo += '\nLatency: ${bestNodeResult['latency']}ms';
+      }
+      if (bestNodeResult['top_3_latencies'] != null) {
+        final top3 = bestNodeResult['top_3_latencies'] as List;
+        selectionInfo += '\nTop 3: ${top3.map((e) => '${e['name']}(${e['latency']}ms)').join(', ')}';
+      }
+      await logger.info('RootShell', selectionInfo);
       
       // 更新状态：正在连接
       setState(() {
         _statusMessage = '正在连接 ${bestNode.name}...';
       });
 
-      final logger = LoggerService();
       await logger.info('RootShell', 'Attempting to connect to ${bestNode.name} (${bestNode.protocol})');
       print('[RootShell] Attempting to connect to ${bestNode.name} (${bestNode.protocol})');
       
@@ -296,6 +333,9 @@ class _RootShellState extends State<RootShell> with WindowListener {
       );
 
       await logger.info('RootShell', 'Connection result: $success');
+      if (!success) {
+        await logger.error('RootShell', 'Connection failed for ${bestNode.name} - check VPN logs for details');
+      }
       print('[RootShell] Connection result: $success');
       
       // 如果连接返回 false，说明启动失败

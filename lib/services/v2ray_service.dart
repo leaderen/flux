@@ -34,26 +34,41 @@ class V2rayService {
       final configJson = jsonEncode(fullConfig);
       
       print('[V2rayService] Connecting to ${node.name} (${node.protocol})');
-      print('[V2rayService] Config: $configJson');
+      print('[V2rayService] Address: ${node.address}:${node.port}');
+      print('[V2rayService] Config length: ${configJson.length} bytes');
       
-      final result = await _channel.invokeMethod<bool>(
+      final result = await _channel.invokeMethod<dynamic>(
         'connect',
         {'config': configJson},
       );
       
-      if (result == true) {
-        print('[V2rayService] Connection initiated successfully');
-      } else {
-        print('[V2rayService] Connection failed: result is false');
+      // 处理返回结果
+      bool success = false;
+      String? errorMessage;
+      
+      if (result is bool) {
+        success = result;
+      } else if (result is Map) {
+        success = result['success'] == true;
+        errorMessage = result['error']?.toString();
       }
       
-      return result ?? false;
+      if (success) {
+        print('[V2rayService] ✅ Connection initiated successfully');
+      } else {
+        final error = errorMessage ?? 'result is false';
+        print('[V2rayService] ❌ Connection failed: $error');
+      }
+      
+      return success;
     } on PlatformException catch (e) {
-      print('[V2rayService] PlatformException: ${e.code} - ${e.message}');
+      print('[V2rayService] ❌ PlatformException: ${e.code} - ${e.message}');
       print('[V2rayService] Details: ${e.details}');
+      print('[V2rayService] StackTrace: ${e.stackTrace}');
       return false;
-    } catch (e) {
-      print('[V2rayService] Error: $e');
+    } catch (e, stackTrace) {
+      print('[V2rayService] ❌ Error: $e');
+      print('[V2rayService] StackTrace: $stackTrace');
       return false;
     }
   }
