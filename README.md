@@ -176,9 +176,9 @@ Future<String> getBaseUrl() async {
 
 如果这个项目对您有帮助，欢迎请作者喝杯咖啡，支持开源开发！
 
-| BNB Chain | Arbitrum | Ethereum |
-| :---: | :---: | :---: |
-| <img src="assets/images/donation/bnb.png" width="200" alt="BNB"> | <img src="assets/images/donation/arbitrum.png" width="200" alt="Arbitrum"> | <img src="assets/images/donation/eth.png" width="200" alt="Ethereum"> |
+| BNB Chain | Arbitrum | Ethereum | TRC20 (USDT) |
+| :---: | :---: | :---: | :---: |
+| <img src="assets/images/donation/bnb.png" width="200" alt="BNB"> | <img src="assets/images/donation/arbitrum.png" width="200" alt="Arbitrum"> | <img src="assets/images/donation/eth.png" width="200" alt="Ethereum"> | <img src="assets/images/donation/trc20.png" width="200" alt="TRC20"> |
 
 ---
 

@@ -301,14 +301,14 @@ class _AccountScreenState extends State<AccountScreen> {
                     context,
                     Icons.description_outlined,
                     '服务条款',
-                    () => _openUrl('https://speed.1l1l.de/tos'),
+                    () => _openUrl(''),
                   ),
                   const Divider(height: 24, color: AppColors.border),
                   _buildLinkRow(
                     context,
                     Icons.privacy_tip_outlined,
                     '隐私协议',
-                    () => _openUrl('https://speed.1l1l.de/privacy'),
+                    () => _openUrl(''),
                   ),
                   const Divider(height: 24, color: AppColors.border),
                   _buildLinkRow(
