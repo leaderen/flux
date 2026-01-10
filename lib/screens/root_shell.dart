@@ -8,6 +8,7 @@ import '../services/subscription_service.dart';
 import '../services/unified_vpn_service.dart';
 import '../services/platform_service.dart';
 import '../services/tray_service.dart';
+import '../services/logger_service.dart';
 import '../models/server_node.dart';
 import '../theme/app_colors.dart';
 import 'account_screen.dart';
