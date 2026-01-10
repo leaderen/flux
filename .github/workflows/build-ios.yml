@@ -98,14 +98,21 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
       
-      - name: Export IPA (optional - requires signing)
-        if: false  # 设置为 true 如果需要导出 IPA（需要配置证书）
-        working-directory: ios
+      - name: Create unsigned IPA from .app
         run: |
-          xcodebuild -exportArchive \
-            -archivePath build/Runner.xcarchive \
-            -exportPath build/ipa \
-            -exportOptionsPlist ExportOptions.plist
+          # 创建 Payload 目录
+          mkdir -p build/ipa/Payload
+          
+          # 复制 .app 到 Payload 目录
+          cp -r build/ios/iphoneos/Runner.app build/ipa/Payload/
+          
+          # 创建 IPA 文件（ZIP 格式）
+          cd build/ipa
+          zip -r ../flux-unsigned.ipa Payload
+          cd ../..
+          
+          echo "IPA created at: build/flux-unsigned.ipa"
+          ls -lh build/flux-unsigned.ipa || echo "IPA creation may have failed"
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -114,7 +121,9 @@ jobs:
           path: |
             build/ios/iphoneos/Runner.app
             ios/build/Runner.xcarchive
+            build/flux-unsigned.ipa
           retention-days: 30
+          if-no-files-found: warn
       
       - name: Build summary
         run: |
@@ -133,4 +142,10 @@ jobs:
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Runner.app: Available in artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Runner.xcarchive: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+          if [ -f "build/flux-unsigned.ipa" ]; then
+            echo "- flux-unsigned.ipa: Available in artifacts (unsigned, cannot install directly)" >> $GITHUB_STEP_SUMMARY
+            echo "- Note: This IPA is unsigned and cannot be installed on devices without additional signing" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- IPA file: Creation may have failed (check logs)" >> $GITHUB_STEP_SUMMARY
+          fi
 
