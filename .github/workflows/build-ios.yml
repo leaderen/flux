@@ -1,0 +1,103 @@
+name: Build iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        description: 'Build mode'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - debug
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'lib/**'
+      - 'ios/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/build-ios.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    name: Build iOS App
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+          channel: 'stable'
+          cache: true
+      
+      - name: Install CocoaPods dependencies
+        working-directory: ios
+        run: |
+          sudo gem install cocoapods
+          pod install
+      
+      - name: Get Flutter dependencies
+        run: flutter pub get
+      
+      - name: Verify Flutter setup
+        run: flutter doctor -v
+      
+      - name: Build iOS (no codesign)
+        run: |
+          flutter build ios --${{ github.event.inputs.build_mode || 'release' }} --no-codesign
+        env:
+          FLUTTER_BUILD_MODE: ${{ github.event.inputs.build_mode || 'release' }}
+      
+      - name: Create Xcode Archive
+        working-directory: ios
+        run: |
+          xcodebuild clean archive \
+            -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration ${{ github.event.inputs.build_mode == 'debug' && 'Debug' || 'Release' }} \
+            -archivePath build/Runner.xcarchive \
+            -allowProvisioningUpdates \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+      
+      - name: Export IPA (optional - requires signing)
+        if: false  # 设置为 true 如果需要导出 IPA（需要配置证书）
+        working-directory: ios
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/Runner.xcarchive \
+            -exportPath build/ipa \
+            -exportOptionsPlist ExportOptions.plist
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-${{ github.event.inputs.build_mode || 'release' }}-${{ github.run_number }}
+          path: |
+            build/ios/iphoneos/Runner.app
+            ios/build/Runner.xcarchive
+          retention-days: 30
+      
+      - name: Build summary
+        run: |
+          echo "## iOS Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Build Mode: ${{ github.event.inputs.build_mode || 'release' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Flutter Version: $(flutter --version | head -n 1)" >> $GITHUB_STEP_SUMMARY
+          echo "- Build Number: ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Runner.app: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Runner.xcarchive: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+

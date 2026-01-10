@@ -9,7 +9,7 @@ class ApiConfig {
 
   // TODO: Configure your API URL here
   Future<String> getBaseUrl() async {
-    return 'YOUR_API_URL_HERE'; 
+    return 'https://node.quicklian.com/api/v1'; 
   }
 
   Future<String?> getToken() async {
