@@ -362,19 +362,43 @@ class _RootShellState extends State<RootShell> with WindowListener {
 
   Future<void> _connectNode(ServerNode node) async {
     if (_isConnecting) return;
+    
+    final logger = LoggerService();
+    await logger.info('RootShell', '🔵 Manual node selection: ${node.name} (${node.protocol})');
+    await logger.info('RootShell', 'Node details: ${node.address}:${node.port}, latency: ${node.latency ?? 'N/A'}ms');
+    
     _isConnecting = true;
     setState(() {
       _status = ShellStatus.connecting;
       _statusMessage = '正在连接 ${node.name}...';
     });
+    
     try {
+      // 先断开现有连接
+      await logger.info('RootShell', 'Disconnecting existing connection...');
       await _vpnService.disconnect();
-      final success = await _vpnService.connect(node);
+      
+      // 连接新节点
+      await logger.info('RootShell', 'Connecting to manually selected node: ${node.name}');
+      final success = await _vpnService.connect(node).timeout(
+        const Duration(seconds: 20),
+        onTimeout: () {
+          logger.warning('RootShell', 'Connection timeout (20s) for manual selection');
+          return true; // 返回 true 让状态流处理
+        },
+      );
+      
+      await logger.info('RootShell', 'Manual connection result: $success');
+      if (!success) {
+        await logger.error('RootShell', 'Manual connection failed for ${node.name} - check VPN logs for details');
+      }
+      
       setState(() {
         _status = success ? ShellStatus.connected : ShellStatus.error;
         _statusMessage = success ? '已连接 ${node.name}' : '连接失败';
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      await logger.error('RootShell', 'Manual connection error: $e', stackTrace: stackTrace.toString());
       setState(() {
         _status = ShellStatus.error;
         _statusMessage = '连接错误: $e';
