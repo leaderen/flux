@@ -10,13 +10,13 @@ class ApiConfig {
 
   // 从编译时常量获取 API URL（通过 --dart-define=API_BASE_URL=xxx 传递）
   // 如果没有定义，则使用默认值或从 SharedPreferences 读取
-  static const String? _buildTimeApiUrl = 
-      String.fromEnvironment('API_BASE_URL', defaultValue: null);
+  static const String _buildTimeApiUrl = 
+      String.fromEnvironment('API_BASE_URL', defaultValue: '');
 
   Future<String> getBaseUrl() async {
     // 优先使用编译时传入的 API URL
-    if (_buildTimeApiUrl != null && _buildTimeApiUrl!.isNotEmpty) {
-      return _buildTimeApiUrl!;
+    if (_buildTimeApiUrl.isNotEmpty) {
+      return _buildTimeApiUrl;
     }
     
     // 其次从 SharedPreferences 读取用户配置的 URL
