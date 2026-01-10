@@ -164,6 +164,51 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
       
+      - name: Collect build logs
+        if: always()
+        run: |
+          # 收集构建日志
+          mkdir -p build/logs
+          
+          # 保存 Flutter 构建日志（如果存在）
+          if [ -f "build/ios/iphoneos/Runner.app/Info.plist" ]; then
+            echo "Build successful" > build/logs/build_status.txt
+          else
+            echo "Build may have issues" > build/logs/build_status.txt
+          fi
+          
+          # 保存环境信息
+          {
+            echo "Flutter Version:"
+            flutter --version
+            echo ""
+            echo "Dart Version:"
+            dart --version
+            echo ""
+            echo "CocoaPods Version:"
+            pod --version || echo "Not installed"
+            echo ""
+            echo "Xcode Version:"
+            xcodebuild -version || echo "Not available"
+          } > build/logs/environment.txt
+          
+          # 检查是否有编译错误
+          if [ -d "ios/build" ]; then
+            find ios/build -name "*.log" -type f | head -5 | while read logfile; do
+              echo "=== $logfile ===" >> build/logs/xcode_build.log
+              tail -100 "$logfile" >> build/logs/xcode_build.log 2>/dev/null || true
+            done
+          fi
+      
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ github.run_number }}
+          path: build/logs/
+          retention-days: 7
+          if-no-files-found: ignore
+      
       - name: Build summary
         run: |
           echo "## iOS Build Summary" >> $GITHUB_STEP_SUMMARY
@@ -187,4 +232,8 @@ jobs:
           else
             echo "- IPA file: Creation may have failed (check logs)" >> $GITHUB_STEP_SUMMARY
           fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Logs" >> $GITHUB_STEP_SUMMARY
+          echo "- Build logs are available in the artifacts section" >> $GITHUB_STEP_SUMMARY
+          echo "- Look for: \`build-logs-${{ github.run_number }}\` artifact" >> $GITHUB_STEP_SUMMARY
 

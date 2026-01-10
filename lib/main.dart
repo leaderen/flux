@@ -3,6 +3,7 @@ import 'screens/auth_screen.dart';
 import 'screens/root_shell.dart';
 import 'services/api_config.dart';
 import 'services/v2board_api.dart';
+import 'services/logger_service.dart';
 import 'theme/app_theme.dart';
 import 'widgets/flux_splash.dart';
 
@@ -12,6 +13,10 @@ import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // 初始化日志服务
+  await LoggerService().init();
+  LoggerService().info('App', 'Flux app starting...');
   
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     await windowManager.ensureInitialized();

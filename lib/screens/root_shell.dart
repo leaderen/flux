@@ -14,6 +14,7 @@ import 'account_screen.dart';
 import 'home_dashboard.dart';
 import 'plans_screen.dart';
 import 'orders_screen.dart';
+import 'logs_screen.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/flux_loader.dart';
 import '../widgets/glass_nav_bar.dart';
@@ -133,14 +134,26 @@ class _RootShellState extends State<RootShell> with WindowListener {
       }
     } else {
       // 断开连接
+      final logger = LoggerService();
       if (_status == ShellStatus.connecting) {
-        // 连接失败
-        setState(() {
-          _status = ShellStatus.error;
-          _statusMessage = '连接失败，请检查配置或网络';
+        // 连接失败 - 但需要等待一下，因为状态可能还在变化
+        // iOS VPN 连接是异步的，可能需要几秒钟
+        logger.warning('RootShell', 'Status changed to disconnected while connecting - waiting for final status...');
+        print('[RootShell] ⚠️ Status changed to disconnected while connecting - waiting for final status...');
+        // 不立即设置为错误，等待一下看是否还会变化
+        Future.delayed(const Duration(seconds: 3), () async {
+          if (mounted && _status == ShellStatus.connecting) {
+            // 如果 3 秒后还是连接中状态，说明真的失败了
+            await logger.error('RootShell', 'Connection failed after 3 seconds wait');
+            setState(() {
+              _status = ShellStatus.error;
+              _statusMessage = '连接失败，请检查日志或重试';
+            });
+          }
         });
       } else if (_status == ShellStatus.connected) {
         // VPN 被后台杀死
+        logger.info('RootShell', 'VPN disconnected (was connected)');
         setState(() {
           _status = ShellStatus.disconnected;
           _statusMessage = 'VPN 已断开';
@@ -267,27 +280,35 @@ class _RootShellState extends State<RootShell> with WindowListener {
         _statusMessage = '正在连接 ${bestNode.name}...';
       });
 
+      final logger = LoggerService();
+      await logger.info('RootShell', 'Attempting to connect to ${bestNode.name} (${bestNode.protocol})');
       print('[RootShell] Attempting to connect to ${bestNode.name} (${bestNode.protocol})');
       
       final success = await _vpnService.connect(bestNode).timeout(
-        const Duration(seconds: 15),
+        const Duration(seconds: 20), // 增加超时时间，因为 iOS VPN 连接需要时间
         onTimeout: () {
-          print('[RootShell] Connection timeout');
-          return false;
+          logger.warning('RootShell', 'Connection timeout (20s) - but VPN may still be connecting');
+          print('[RootShell] ⚠️ Connection timeout (20s) - but VPN may still be connecting');
+          // 不立即返回 false，等待状态流更新
+          return true; // 返回 true 让状态流处理
         },
       );
 
+      await logger.info('RootShell', 'Connection result: $success');
       print('[RootShell] Connection result: $success');
       
-      // 如果连接返回 true，说明连接已启动，等待状态流更新
-      // 如果返回 false，说明连接失败
+      // 如果连接返回 false，说明启动失败
       if (!success) {
         setState(() {
           _status = ShellStatus.error;
-          _statusMessage = '连接失败，请检查日志或重试';
+          _statusMessage = '连接启动失败，请检查日志';
         });
+      } else {
+        // 如果返回 true，说明启动成功，等待状态流更新
+        // 给状态流一些时间来处理状态变化
+        print('[RootShell] ✅ Connection initiated, waiting for status update...');
+        // 状态会通过 _onVpnStatusChanged 更新
       }
-      // 如果 success 为 true，状态会通过 _onVpnStatusChanged 更新
     } catch (e) {
       setState(() {
         _status = ShellStatus.error;
@@ -444,6 +465,15 @@ class _RootShellState extends State<RootShell> with WindowListener {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           IconButton(
+                            icon: const Icon(Icons.bug_report, color: AppColors.textPrimary),
+                            tooltip: '查看日志',
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const LogsScreen()),
+                              );
+                            },
+                          ),
+                          IconButton(
                             icon: _isLoadingNodes 
                                 ? const SizedBox(
                                     width: 20, 
@@ -491,6 +521,15 @@ class _RootShellState extends State<RootShell> with WindowListener {
             const SizedBox(width: 8),
             const Text('Flux'),
             const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.bug_report, color: AppColors.textPrimary),
+              tooltip: '查看日志',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LogsScreen()),
+                );
+              },
+            ),
             IconButton(
               icon: _isLoadingNodes 
                   ? const SizedBox(

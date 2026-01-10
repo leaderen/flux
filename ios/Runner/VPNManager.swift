@@ -21,13 +21,15 @@ class VPNManager: NSObject {
         NETunnelProviderManager.loadAllFromPreferences { [weak self] (managers, error) in
             guard let self = self else { return }
             if let error = error {
-                print("Error loading VPN managers: \(error)")
+                print("[VPNManager] ❌ Error loading VPN managers: \(error.localizedDescription)")
                 return
             }
             
             if let managers = managers, !managers.isEmpty {
                 self.manager = managers.first
+                print("[VPNManager] ✅ Loaded existing VPN manager")
             } else {
+                print("[VPNManager] 📝 Creating new VPN manager...")
                 self.manager = NETunnelProviderManager()
                 self.manager?.localizedDescription = "Flux VPN"
                 
@@ -36,30 +38,55 @@ class VPNManager: NSObject {
                 proto.serverAddress = "Flux"
                 self.manager?.protocolConfiguration = proto
                 
+                print("[VPNManager] 📝 Extension Bundle ID: \(self.extensionBundleId)")
+                
                 self.manager?.saveToPreferences(completionHandler: { (error) in
                     if let error = error {
-                        print("Error saving new manager: \(error)")
+                        print("[VPNManager] ❌ Error saving new manager: \(error.localizedDescription)")
+                    } else {
+                        print("[VPNManager] ✅ New VPN manager saved successfully")
                     }
                 })
             }
             
-            // Listen for status changes
-            NotificationCenter.default.addObserver(self, selector: #selector(self.statusDidChange(_:)), name: .NEVPNStatusDidChange, object: nil)
+            // Listen for status changes - 监听所有 VPN 状态变化
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(self.statusDidChange(_:)),
+                name: .NEVPNStatusDidChange,
+                object: nil
+            )
+            print("[VPNManager] 👂 Listening for VPN status changes")
         }
     }
     
     func connect(config: String, result: @escaping FlutterResult) {
-        print("[VPNManager] connect called with config length: \(config.count)")
+        print("[VPNManager] 🔌 connect called with config length: \(config.count)")
+        
+        // 诊断信息
+        print("[VPNManager] 📋 Diagnostic info:")
+        print("[VPNManager]    - Extension Bundle ID: \(self.extensionBundleId)")
+        print("[VPNManager]    - Manager exists: \(self.manager != nil)")
+        if let manager = self.manager {
+            print("[VPNManager]    - Manager enabled: \(manager.isEnabled)")
+            print("[VPNManager]    - Current status: \(manager.connection.status.rawValue)")
+        }
         
         guard let manager = self.manager else {
-            print("[VPNManager] Manager not ready, loading...")
+            print("[VPNManager] ⚠️ Manager not ready, loading...")
             loadManager()
-            // 等待 manager 加载完成
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            // 等待 manager 加载完成，增加等待时间
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 if let manager = self.manager {
+                    print("[VPNManager] ✅ Manager loaded, proceeding with connection")
                     self._doConnect(manager: manager, config: config, result: result)
                 } else {
-                    result(FlutterError(code: "MANAGER_NOT_READY", message: "VPN Manager not loaded yet", details: nil))
+                    print("[VPNManager] ❌ Manager still not available after 2 seconds")
+                    result(FlutterError(
+                        code: "MANAGER_NOT_READY",
+                        message: "VPN Manager not loaded yet. Please try again.",
+                        details: "Extension ID: \(self.extensionBundleId)"
+                    ))
                 }
             }
             return
@@ -128,18 +155,57 @@ class VPNManager: NSObject {
     }
     
     private func _startTunnel(manager: NETunnelProviderManager, result: @escaping FlutterResult) {
+        // 检查 extension bundle ID
+        let extensionId = self.extensionBundleId
+        print("[VPNManager] 🔍 Extension Bundle ID: \(extensionId)")
+        
+        // 直接尝试启动 VPN 隧道（不需要再次 loadFromPreferences）
         do {
+            print("[VPNManager] 🚀 Attempting to start VPN tunnel...")
             try manager.connection.startVPNTunnel(options: [:])
+            
             let status = manager.connection.status
             print("[VPNManager] ✅ VPN tunnel start initiated")
-            print("[VPNManager] 📊 VPN status after start: \(status.rawValue)")
+            print("[VPNManager] 📊 VPN status after start: \(status.rawValue) (\(self._statusDescription(status)))")
             
             // 立即返回 true，让 Flutter 端通过状态流监听连接结果
             // iOS VPN 连接是异步的，需要通过状态流来获取实际连接结果
             result(true)
+            
+            // 设置定时器，定期检查状态（用于调试和诊断）
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                let currentStatus = manager.connection.status
+                print("[VPNManager] 📊 Status after 1s: \(currentStatus.rawValue) (\(self._statusDescription(currentStatus)))")
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                let currentStatus = manager.connection.status
+                print("[VPNManager] 📊 Status after 3s: \(currentStatus.rawValue) (\(self._statusDescription(currentStatus)))")
+                if currentStatus == .disconnected || currentStatus == .invalid {
+                    print("[VPNManager] ⚠️ Connection failed - status is \(self._statusDescription(currentStatus))")
+                }
+            }
         } catch {
-            print("[VPNManager] ❌ Start error: \(error.localizedDescription)")
-            result(FlutterError(code: "START_ERROR", message: error.localizedDescription, details: nil))
+            let errorMsg = error.localizedDescription
+            print("[VPNManager] ❌ Start error: \(errorMsg)")
+            print("[VPNManager] ❌ Error type: \(type(of: error))")
+            print("[VPNManager] ❌ Error details: \(error)")
+            
+            // 检查是否是 extension 不存在的问题
+            let errorLower = errorMsg.lowercased()
+            if errorLower.contains("extension") || errorLower.contains("bundle") || errorLower.contains("not found") || errorLower.contains("unable to find") {
+                print("[VPNManager] ⚠️⚠️⚠️ CRITICAL: PacketTunnel extension may not be configured in Xcode")
+                print("[VPNManager] ⚠️ Please ensure:")
+                print("[VPNManager]    1. PacketTunnel target exists in Xcode project")
+                print("[VPNManager]    2. Bundle ID is: \(extensionId)")
+                print("[VPNManager]    3. PacketTunnelProvider.swift is added to PacketTunnel target")
+            }
+            
+            result(FlutterError(
+                code: "START_ERROR",
+                message: errorMsg,
+                details: "Extension ID: \(extensionId). Please check if PacketTunnel target exists in Xcode."
+            ))
         }
     }
     
@@ -174,35 +240,53 @@ class VPNManager: NSObject {
     }
     
     @objc func statusDidChange(_ notification: Notification) {
-        // 从通知中获取连接对象，如果没有则使用 manager 的连接
-        let connection: NEVPNConnection
-        if let notifConnection = notification.object as? NEVPNConnection {
-            connection = notifConnection
-        } else if let manager = self.manager {
-            connection = manager.connection
-        } else {
+        // iOS 的 NEVPNStatusDidChange 通知的 object 是 NETunnelProviderManager，不是 NEVPNConnection
+        // 我们需要从 manager 获取 connection
+        guard let manager = self.manager else {
+            print("[VPNManager] ⚠️ Manager not available in statusDidChange")
             return
         }
         
+        let connection = manager.connection
         let status = connection.status
         let isConnected = (status == .connected)
         
-        print("[VPNManager] Status changed: \(status.rawValue) - isConnected: \(isConnected)")
+        print("[VPNManager] 📊 Status changed: \(status.rawValue) - isConnected: \(isConnected)")
+        print("[VPNManager] 📊 Status description: \(_statusDescription(status))")
         
-        // 发送状态更新
-        statusSink?(isConnected)
+        // 发送状态更新到 Flutter
+        if let sink = statusSink {
+            sink(isConnected)
+            print("[VPNManager] ✅ Status update sent to Flutter: \(isConnected)")
+        } else {
+            print("[VPNManager] ⚠️ Status sink is nil, cannot send update to Flutter")
+        }
         
-        // 如果连接失败，记录错误
-        if status == .invalid {
-            print("[VPNManager] VPN status is invalid")
-        } else if status == .disconnected {
-            print("[VPNManager] VPN disconnected")
-        } else if status == .connecting {
-            print("[VPNManager] VPN connecting...")
-        } else if status == .connected {
-            print("[VPNManager] VPN connected successfully")
-        } else if status == .reasserting {
-            print("[VPNManager] VPN reasserting...")
+        // 记录详细状态信息
+        switch status {
+        case .invalid:
+            print("[VPNManager] ❌ VPN status is invalid - connection failed")
+        case .disconnected:
+            print("[VPNManager] 🔌 VPN disconnected")
+        case .connecting:
+            print("[VPNManager] 🔄 VPN connecting...")
+        case .connected:
+            print("[VPNManager] ✅ VPN connected successfully")
+        case .reasserting:
+            print("[VPNManager] 🔄 VPN reasserting...")
+        @unknown default:
+            print("[VPNManager] ⚠️ Unknown VPN status: \(status.rawValue)")
+        }
+    }
+    
+    private func _statusDescription(_ status: NEVPNStatus) -> String {
+        switch status {
+        case .invalid: return "invalid"
+        case .disconnected: return "disconnected"
+        case .connecting: return "connecting"
+        case .connected: return "connected"
+        case .reasserting: return "reasserting"
+        @unknown default: return "unknown(\(status.rawValue))"
         }
     }
 }

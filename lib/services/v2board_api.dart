@@ -115,6 +115,11 @@ class V2BoardApi {
     return _get('/user/getSubscribe');
   }
 
+  /// 获取服务器节点列表（直接API方式，不通过订阅链接）
+  Future<Map<String, dynamic>> getServerList() async {
+    return _get('/user/server/fetch');
+  }
+
   Future<Map<String, dynamic>> logout() async {
     return _get('/user/logout');
   }

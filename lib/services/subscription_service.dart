@@ -7,6 +7,7 @@ import 'package:yaml/yaml.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/server_node.dart';
 import 'v2board_api.dart';
+import 'logger_service.dart';
 
 /// 订阅服务
 class SubscriptionService {
@@ -181,44 +182,62 @@ class SubscriptionService {
   /// 获取并解析订阅节点
   /// [forceRefresh] 是否强制刷新，默认为 false
   Future<List<ServerNode>> fetchNodes({bool forceRefresh = false}) async {
+    final logger = LoggerService();
     try {
       // 1. 检查缓存
       if (!forceRefresh) {
         final cached = await _getCachedNodes();
         if (cached != null && cached.isNotEmpty) {
+          await logger.info('Subscription', 'Using cached nodes: ${cached.length} nodes');
           debugPrint('[Subscription] Using cached nodes: ${cached.length} nodes');
           return cached;
         }
       }
 
       // 2. 从API获取订阅链接（带 token 的正式链接）
+      await logger.info('Subscription', 'Fetching subscription URL from API...');
       debugPrint('[Subscription] Fetching subscription URL from API...');
       final subscriptionUrl = await getSubscriptionUrl();
-      debugPrint('[Subscription] Got subscription URL: ${subscriptionUrl.substring(0, subscriptionUrl.length > 100 ? 100 : subscriptionUrl.length)}...');
+      final urlPreview = subscriptionUrl.length > 100 ? '${subscriptionUrl.substring(0, 100)}...' : subscriptionUrl;
+      await logger.info('Subscription', 'Got subscription URL: $urlPreview');
+      debugPrint('[Subscription] Got subscription URL: $urlPreview');
 
       // 3. 下载订阅文件
+      await logger.info('Subscription', 'Downloading subscription content...');
       debugPrint('[Subscription] Downloading subscription content...');
       final subscriptionContent = await downloadSubscription(subscriptionUrl);
+      await logger.info('Subscription', 'Downloaded ${subscriptionContent.length} bytes');
       debugPrint('[Subscription] Downloaded ${subscriptionContent.length} bytes');
 
       // 4. 解析节点列表（自动检测格式）
       final nodes = parseNodes(subscriptionContent);
+      await logger.info('Subscription', 'Parsed ${nodes.length} nodes from subscription');
+      debugPrint('[Subscription] Parsed ${nodes.length} nodes from subscription');
 
       // 5. 保存缓存
       if (nodes.isNotEmpty) {
         await _saveSubscriptionCache(subscriptionContent);
       } else {
         // 如果解析后没有节点，记录订阅内容用于调试
+        final contentPreview = subscriptionContent.length > 200 
+            ? '${subscriptionContent.substring(0, 200)}...' 
+            : subscriptionContent;
+        await logger.warning('Subscription', 'Parsed 0 nodes from subscription');
+        await logger.debug('Subscription', 'Content preview: $contentPreview');
         debugPrint('[Subscription] Parsed 0 nodes from subscription');
-        debugPrint('[Subscription] Content preview: ${subscriptionContent.substring(0, subscriptionContent.length > 200 ? 200 : subscriptionContent.length)}');
+        debugPrint('[Subscription] Content preview: $contentPreview');
       }
 
       return nodes;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      await logger.error('Subscription', 'Failed to fetch nodes: $e', stackTrace: stackTrace.toString());
       // 如果获取失败且不是强制刷新，尝试返回过期缓存
       if (forceRefresh) {
         final cached = await _getCachedNodes(ignoreExpiration: true);
-        if (cached != null) return cached;
+        if (cached != null) {
+          await logger.info('Subscription', 'Using expired cache: ${cached.length} nodes');
+          return cached;
+        }
       }
       throw Exception('Failed to fetch nodes: $e');
     }
