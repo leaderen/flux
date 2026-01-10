@@ -64,7 +64,6 @@ class V2rayService {
     } on PlatformException catch (e) {
       print('[V2rayService] ❌ PlatformException: ${e.code} - ${e.message}');
       print('[V2rayService] Details: ${e.details}');
-      print('[V2rayService] StackTrace: ${e.stackTrace}');
       return false;
     } catch (e, stackTrace) {
       print('[V2rayService] ❌ Error: $e');
