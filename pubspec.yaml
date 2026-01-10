@@ -40,6 +40,7 @@ dependencies:
   shared_preferences: ^2.2.2
   yaml: ^3.1.2
   url_launcher: ^6.3.2
+  intl: ^0.19.0
   
   # Desktop platform support
   window_manager: ^0.4.3        # Window management (minimize to tray)
