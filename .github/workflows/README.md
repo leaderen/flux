@@ -1,5 +1,26 @@
 # GitHub Actions iOS 构建说明
 
+## 配置 API URL
+
+### 方法 1: 通过 GitHub Secrets（推荐）
+
+1. 进入仓库 **Settings → Secrets and variables → Actions**
+2. 点击 **"New repository secret"**
+3. 添加以下 Secret:
+   - **Name**: `API_BASE_URL`
+   - **Value**: 您的 API 地址，例如 `https://your-panel.com/api/v1`
+4. 保存后，构建时会自动使用该 URL
+
+### 方法 2: 通过手动输入
+
+在运行工作流时，可以在 **"API Base URL"** 输入框中直接输入 API 地址。
+
+### 方法 3: 使用默认值
+
+如果不配置，将使用代码中的默认值 `https://node.quicklian.com/api/v1`
+
+**注意**: API URL 会在编译时注入到应用中，构建后无法更改。如果需要更改，需要重新构建。
+
 ## 工作流文件
 
 ### 1. `build-ios.yml` - 无签名构建（推荐用于测试）

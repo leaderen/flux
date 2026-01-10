@@ -11,6 +11,11 @@ on:
         options:
           - release
           - debug
+      api_base_url:
+        description: 'API Base URL (e.g., https://your-panel.com/api/v1)'
+        required: false
+        type: string
+        default: ''
   push:
     branches:
       - main
@@ -41,21 +46,37 @@ jobs:
           channel: 'stable'
           cache: true
       
+      - name: Get Flutter dependencies
+        run: flutter pub get
+      
+      - name: Install CocoaPods
+        run: |
+          sudo gem install cocoapods
+          pod --version
+      
       - name: Install CocoaPods dependencies
         working-directory: ios
         run: |
-          sudo gem install cocoapods
-          pod install
-      
-      - name: Get Flutter dependencies
-        run: flutter pub get
+          # Flutter 会在 pub get 时生成 Podfile，如果不存在则跳过
+          if [ -f "Podfile" ]; then
+            pod install --repo-update
+          else
+            echo "Podfile not found. Flutter will generate it during build."
+            echo "This is normal for Flutter projects - pod install will be handled automatically."
+          fi
       
       - name: Verify Flutter setup
         run: flutter doctor -v
       
       - name: Build iOS (no codesign)
         run: |
-          flutter build ios --${{ github.event.inputs.build_mode || 'release' }} --no-codesign
+          BUILD_ARGS="--${{ github.event.inputs.build_mode || 'release' }} --no-codesign"
+          if [ -n "${{ github.event.inputs.api_base_url }}" ]; then
+            BUILD_ARGS="$BUILD_ARGS --dart-define=API_BASE_URL=${{ github.event.inputs.api_base_url }}"
+          elif [ -n "${{ secrets.API_BASE_URL }}" ]; then
+            BUILD_ARGS="$BUILD_ARGS --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }}"
+          fi
+          flutter build ios $BUILD_ARGS
         env:
           FLUTTER_BUILD_MODE: ${{ github.event.inputs.build_mode || 'release' }}
       
@@ -96,6 +117,13 @@ jobs:
           echo "- Build Mode: ${{ github.event.inputs.build_mode || 'release' }}" >> $GITHUB_STEP_SUMMARY
           echo "- Flutter Version: $(flutter --version | head -n 1)" >> $GITHUB_STEP_SUMMARY
           echo "- Build Number: ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ github.event.inputs.api_base_url }}" ]; then
+            echo "- API Base URL: ${{ github.event.inputs.api_base_url }}" >> $GITHUB_STEP_SUMMARY
+          elif [ -n "${{ secrets.API_BASE_URL }}" ]; then
+            echo "- API Base URL: Configured (from secrets)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- API Base URL: Using default value" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Runner.app: Available in artifacts" >> $GITHUB_STEP_SUMMARY
