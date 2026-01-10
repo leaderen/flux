@@ -460,7 +460,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       const SizedBox(height: 10),
                       DropdownButtonFormField<String>(
                         key: ValueKey(_period),
-                        initialValue: _period,
+                        value: _period,
                         items: periods
                             .map(
                               (p) => DropdownMenuItem(
