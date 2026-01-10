@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:yaml/yaml.dart';
@@ -165,8 +166,10 @@ class SubscriptionService {
         } else if (line.startsWith('trojan://')) {
           final node = ServerNode.fromTrojan(line);
           if (node != null) nodes.add(node);
+        } else if (line.startsWith('ss://')) {
+          final node = ServerNode.fromShadowsocks(line);
+          if (node != null) nodes.add(node);
         }
-        // 可以扩展支持其他协议：vless://, ss://等
       } catch (_) {
 
       }
@@ -182,16 +185,21 @@ class SubscriptionService {
       // 1. 检查缓存
       if (!forceRefresh) {
         final cached = await _getCachedNodes();
-        if (cached != null) {
+        if (cached != null && cached.isNotEmpty) {
+          debugPrint('[Subscription] Using cached nodes: ${cached.length} nodes');
           return cached;
         }
       }
 
       // 2. 从API获取订阅链接（带 token 的正式链接）
+      debugPrint('[Subscription] Fetching subscription URL from API...');
       final subscriptionUrl = await getSubscriptionUrl();
+      debugPrint('[Subscription] Got subscription URL: ${subscriptionUrl.substring(0, subscriptionUrl.length > 100 ? 100 : subscriptionUrl.length)}...');
 
       // 3. 下载订阅文件
+      debugPrint('[Subscription] Downloading subscription content...');
       final subscriptionContent = await downloadSubscription(subscriptionUrl);
+      debugPrint('[Subscription] Downloaded ${subscriptionContent.length} bytes');
 
       // 4. 解析节点列表（自动检测格式）
       final nodes = parseNodes(subscriptionContent);
@@ -199,6 +207,10 @@ class SubscriptionService {
       // 5. 保存缓存
       if (nodes.isNotEmpty) {
         await _saveSubscriptionCache(subscriptionContent);
+      } else {
+        // 如果解析后没有节点，记录订阅内容用于调试
+        debugPrint('[Subscription] Parsed 0 nodes from subscription');
+        debugPrint('[Subscription] Content preview: ${subscriptionContent.substring(0, subscriptionContent.length > 200 ? 200 : subscriptionContent.length)}');
       }
 
       return nodes;

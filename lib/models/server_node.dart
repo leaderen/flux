@@ -254,6 +254,93 @@ class ServerNode {
     }
   }
 
+  /// 从Shadowsocks链接解析
+  static ServerNode? fromShadowsocks(String ssLink) {
+    try {
+      if (!ssLink.startsWith('ss://')) {
+        return null;
+      }
+
+      // 移除 ss:// 前缀
+      final content = ssLink.substring(5);
+      
+      // 分离 base64 部分和服务器部分
+      final atIndex = content.indexOf('@');
+      if (atIndex == -1) {
+        return null;
+      }
+
+      final base64Part = content.substring(0, atIndex);
+      final serverPart = content.substring(atIndex + 1);
+      
+      // 解析服务器部分 (server:port#name)
+      final hashIndex = serverPart.indexOf('#');
+      final name = hashIndex != -1 
+          ? _decodeNodeName(serverPart.substring(hashIndex + 1), fallback: 'Shadowsocks')
+          : 'Shadowsocks';
+      
+      final serverPort = hashIndex != -1 
+          ? serverPart.substring(0, hashIndex)
+          : serverPart;
+      
+      final colonIndex = serverPort.lastIndexOf(':');
+      if (colonIndex == -1) {
+        return null;
+      }
+      
+      final server = serverPort.substring(0, colonIndex);
+      final port = int.tryParse(serverPort.substring(colonIndex + 1)) ?? 0;
+      
+      // 解码 base64 部分
+      String cipher = 'aes-256-gcm';
+      String password = '';
+      
+      try {
+        // 尝试解码 base64
+        final decoded = utf8.decode(base64Decode(base64Part));
+        
+        // 格式可能是 cipher:password 或只有 password
+        final colonPos = decoded.indexOf(':');
+        if (colonPos != -1) {
+          cipher = decoded.substring(0, colonPos);
+          password = decoded.substring(colonPos + 1);
+        } else {
+          password = decoded;
+        }
+      } catch (e) {
+        // 如果 base64 解码失败，尝试从 URI 查询参数获取
+        try {
+          final uri = Uri.parse(ssLink);
+          cipher = uri.queryParameters['cipher'] ?? 'aes-256-gcm';
+          // 如果 base64 解码失败，可能是 URL-safe base64
+          final urlSafeBase64 = base64Part.replaceAll('-', '+').replaceAll('_', '/');
+          final padding = (4 - (urlSafeBase64.length % 4)) % 4;
+          final padded = urlSafeBase64 + ('=' * padding);
+          password = utf8.decode(base64Decode(padded));
+        } catch (_) {
+          return null;
+        }
+      }
+
+      return ServerNode(
+        name: name,
+        address: server,
+        port: port,
+        protocol: 'shadowsocks',
+        uuid: password,
+        security: cipher,
+        rawConfig: {
+          'cipher': cipher,
+          'password': password,
+          'server': server,
+          'port': port,
+        },
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
   static String _decodeNodeName(String fragment, {required String fallback}) {
     if (fragment.isEmpty) return fallback;
     try {
