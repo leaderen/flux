@@ -374,29 +374,37 @@ class _RootShellState extends State<RootShell> with WindowListener {
     });
     
     try {
-      // 先断开现有连接
-      await logger.info('RootShell', 'Disconnecting existing connection...');
-      await _vpnService.disconnect();
+      // 先断开现有连接（如果已连接）
+      if (_status == ShellStatus.connected) {
+        await logger.info('RootShell', 'Disconnecting existing connection before manual selection...');
+        await _vpnService.disconnect();
+        // 等待一下让断开完成
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
       
       // 连接新节点
       await logger.info('RootShell', 'Connecting to manually selected node: ${node.name}');
       final success = await _vpnService.connect(node).timeout(
         const Duration(seconds: 20),
         onTimeout: () {
-          logger.warning('RootShell', 'Connection timeout (20s) for manual selection');
+          logger.warning('RootShell', 'Connection timeout (20s) for manual selection - but VPN may still be connecting');
           return true; // 返回 true 让状态流处理
         },
       );
       
-      await logger.info('RootShell', 'Manual connection result: $success');
+      await logger.info('RootShell', 'Manual connection initiated: $success');
       if (!success) {
-        await logger.error('RootShell', 'Manual connection failed for ${node.name} - check VPN logs for details');
+        await logger.error('RootShell', 'Manual connection failed to start for ${node.name} - check VPN logs for details');
+        setState(() {
+          _status = ShellStatus.error;
+          _statusMessage = '连接启动失败，请检查日志';
+        });
+      } else {
+        // 如果返回 true，说明启动成功，等待状态流更新
+        // iOS VPN 连接是异步的，需要通过状态流来获取实际连接结果
+        await logger.info('RootShell', '✅ Manual connection initiated, waiting for status update...');
+        // 状态会通过 _onVpnStatusChanged 更新
       }
-      
-      setState(() {
-        _status = success ? ShellStatus.connected : ShellStatus.error;
-        _statusMessage = success ? '已连接 ${node.name}' : '连接失败';
-      });
     } catch (e, stackTrace) {
       await logger.error('RootShell', 'Manual connection error: $e', stackTrace: stackTrace.toString());
       setState(() {
@@ -404,7 +412,12 @@ class _RootShellState extends State<RootShell> with WindowListener {
         _statusMessage = '连接错误: $e';
       });
     } finally {
-      _isConnecting = false;
+      // 注意：不要在这里设置 _isConnecting = false
+      // 因为连接是异步的，状态会通过 _onVpnStatusChanged 更新
+      // 只有在连接失败时才重置 _isConnecting
+      if (_status == ShellStatus.error) {
+        _isConnecting = false;
+      }
     }
   }
 
