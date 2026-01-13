@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/plan.dart';
 import '../services/latency_test_service.dart';
 import '../services/subscription_service.dart';
@@ -38,7 +39,8 @@ class _RootShellState extends State<RootShell> with WindowListener {
   final _trayService = TrayService.instance;
   
   ShellStatus _status = ShellStatus.disconnected;
-  String _statusMessage = '未连接';
+  // Initial value, will be updated in build or via state changes
+  String _statusMessage = '';
   int _index = 0;
   bool _isSwitching = false;
   int _accountReload = 0;
@@ -60,6 +62,26 @@ class _RootShellState extends State<RootShell> with WindowListener {
       windowManager.addListener(this);
       _initWindow();
     }
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isDesktop) {
+      _updateTrayStrings();
+    }
+  }
+
+  void _updateTrayStrings() {
+    final l10n = AppLocalizations.of(context)!;
+    _trayService.updateStrings(
+      show: l10n.appTitle,
+      connect: l10n.connect,
+      disconnect: l10n.disconnect,
+      quit: l10n.quit,
+      connected: l10n.connected,
+      disconnected: l10n.disconnected,
+    );
   }
   
   Future<void> _initWindow() async {
@@ -107,7 +129,12 @@ class _RootShellState extends State<RootShell> with WindowListener {
     if (mounted && isConnected) {
       setState(() {
         _status = ShellStatus.connected;
-        _statusMessage = '已连接';
+        _statusMessage = AppLocalizations.of(context)!.connected;
+      });
+    } else {
+       setState(() {
+        _status = ShellStatus.disconnected;
+        _statusMessage = AppLocalizations.of(context)!.disconnected;
       });
     }
   }
@@ -118,12 +145,12 @@ class _RootShellState extends State<RootShell> with WindowListener {
     if (!isConnected && _status == ShellStatus.connected) {
       setState(() {
         _status = ShellStatus.disconnected;
-        _statusMessage = 'VPN 已断开';
+        _statusMessage = AppLocalizations.of(context)!.disconnected;
       });
     } else if (isConnected && _status != ShellStatus.connected) {
       setState(() {
         _status = ShellStatus.connected;
-        _statusMessage = '已连接';
+        _statusMessage = AppLocalizations.of(context)!.connected;
       });
     }
   }
@@ -186,21 +213,27 @@ class _RootShellState extends State<RootShell> with WindowListener {
       _isConnecting = true;
       setState(() {
         _status = ShellStatus.connecting;
-        _statusMessage = '正在断开...';
+        _statusMessage = '${AppLocalizations.of(context)!.disconnect}...';
       });
       try {
         await _vpnService.disconnect();
-        setState(() {
-          _status = ShellStatus.disconnected;
-          _statusMessage = '已断开';
-        });
+        if (mounted) {
+          setState(() {
+            _status = ShellStatus.disconnected;
+            _statusMessage = AppLocalizations.of(context)!.disconnected;
+          });
+        }
       } catch (e) {
-        setState(() {
-          _status = ShellStatus.error;
-          _statusMessage = '断开失败: $e';
-        });
+        if (mounted) {
+          setState(() {
+            _status = ShellStatus.error;
+            _statusMessage = '${AppLocalizations.of(context)!.error}: $e';
+          });
+        }
       } finally {
-        _isConnecting = false;
+        if (mounted) {
+           setState(() => _isConnecting = false);
+        }
       }
       return;
     }
@@ -208,28 +241,32 @@ class _RootShellState extends State<RootShell> with WindowListener {
     _isConnecting = true;
     setState(() {
       _status = ShellStatus.connecting;
-      _statusMessage = '正在拉取节点...';
+      _statusMessage = AppLocalizations.of(context)!.connecting;
     });
 
     try {
       // 异步拉取节点，避免阻塞 UI
       final nodes = await _subscriptionService.fetchNodes().timeout(
         const Duration(seconds: 15),
-        onTimeout: () => throw Exception('拉取节点超时'),
+        onTimeout: () => throw Exception(AppLocalizations.of(context)!.networkError),
       );
       
       if (nodes.isEmpty) {
-        setState(() {
-          _status = ShellStatus.error;
-          _statusMessage = '没有可用节点';
-        });
+        if (mounted) {
+          setState(() {
+            _status = ShellStatus.error;
+            _statusMessage = AppLocalizations.of(context)!.noServers;
+          });
+        }
         return;
       }
 
       // 更新状态：测试延迟
-      setState(() {
-        _statusMessage = '正在测试节点延迟...';
-      });
+      if (mounted) {
+        setState(() {
+          _statusMessage = AppLocalizations.of(context)!.testLatency;
+        });
+      }
 
       // 异步测试延迟，限制测试时间
       await _latencyService.testNodesLatency(nodes).timeout(
@@ -242,28 +279,36 @@ class _RootShellState extends State<RootShell> with WindowListener {
       final bestNode = _latencyService.findBestNode(nodes) ?? nodes.first;
       
       // 更新状态：正在连接
-      setState(() {
-        _statusMessage = '正在连接 ${bestNode.name}...';
-      });
+      if (mounted) {
+        setState(() {
+          _statusMessage = '${AppLocalizations.of(context)!.connecting} ${bestNode.name}...';
+        });
+      }
 
       final success = await _vpnService.connect(bestNode).timeout(
         const Duration(seconds: 10),
         onTimeout: () => false,
       );
 
-      setState(() {
-        _status = success ? ShellStatus.connected : ShellStatus.error;
-        _statusMessage = success
-            ? '已连接 ${bestNode.name}'
-            : '连接失败';
-      });
+      if (mounted) {
+        setState(() {
+          _status = success ? ShellStatus.connected : ShellStatus.error;
+          _statusMessage = success
+              ? '${AppLocalizations.of(context)!.connected} ${bestNode.name}'
+              : AppLocalizations.of(context)!.disconnected;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _status = ShellStatus.error;
-        _statusMessage = '连接错误: ${e.toString().replaceAll('Exception: ', '')}';
-      });
+      if (mounted) {
+        setState(() {
+          _status = ShellStatus.error;
+          _statusMessage = '${AppLocalizations.of(context)!.error}: ${e.toString().replaceAll('Exception: ', '')}';
+        });
+      }
     } finally {
-      _isConnecting = false;
+      if (mounted) {
+         setState(() => _isConnecting = false);
+      }
     }
   }
 
@@ -272,22 +317,30 @@ class _RootShellState extends State<RootShell> with WindowListener {
     _isConnecting = true;
     setState(() {
       _status = ShellStatus.connecting;
-      _statusMessage = '正在连接 ${node.name}...';
+      _statusMessage = '${AppLocalizations.of(context)!.connecting} ${node.name}...';
     });
     try {
       await _vpnService.disconnect();
       final success = await _vpnService.connect(node);
-      setState(() {
-        _status = success ? ShellStatus.connected : ShellStatus.error;
-        _statusMessage = success ? '已连接 ${node.name}' : '连接失败';
-      });
+      if (mounted) {
+        setState(() {
+          _status = success ? ShellStatus.connected : ShellStatus.error;
+          _statusMessage = success 
+              ? '${AppLocalizations.of(context)!.connected} ${node.name}' 
+              : AppLocalizations.of(context)!.disconnected;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _status = ShellStatus.error;
-        _statusMessage = '连接错误: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _status = ShellStatus.error;
+          _statusMessage = '${AppLocalizations.of(context)!.error}: $e';
+        });
+      }
     } finally {
-      _isConnecting = false;
+      if (mounted) {
+         setState(() => _isConnecting = false);
+      }
     }
   }
 
@@ -318,12 +371,12 @@ class _RootShellState extends State<RootShell> with WindowListener {
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         builder: (context) {
-          if (nodes.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.all(20),
-              child: Text('暂无节点', style: TextStyle(color: AppColors.textSecondary)),
-            );
-          }
+            if (nodes.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(AppLocalizations.of(context)!.noServers, style: const TextStyle(color: AppColors.textSecondary)),
+              );
+            }
           return SafeArea(
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
@@ -356,7 +409,7 @@ class _RootShellState extends State<RootShell> with WindowListener {
       if (mounted) {
          setState(() => _isLoadingNodes = false);
          ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text('加载节点失败: $e')),
+           SnackBar(content: Text('${AppLocalizations.of(context)!.error}: $e')),
          );
       }
     }
@@ -420,7 +473,7 @@ class _RootShellState extends State<RootShell> with WindowListener {
                                     child: FluxLoader(size: 20, color: AppColors.textPrimary)
                                   )
                                 : const Icon(Icons.storage_rounded, color: AppColors.textPrimary),
-                            tooltip: '节点列表',
+                            tooltip: AppLocalizations.of(context)!.servers,
                             onPressed: _showNodePicker,
                           ),
                         ],
@@ -468,7 +521,7 @@ class _RootShellState extends State<RootShell> with WindowListener {
                       child: FluxLoader(size: 20, color: AppColors.textPrimary)
                     )
                   : const Icon(Icons.storage_rounded, color: AppColors.textPrimary),
-              tooltip: '节点列表',
+              tooltip: AppLocalizations.of(context)!.selectNode,
               onPressed: _showNodePicker,
             ),
           ],

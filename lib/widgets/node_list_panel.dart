@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/server_node.dart';
 import '../utils/node_utils.dart';
+import '../l10n/generated/app_localizations.dart';
 
 /// 节点列表面板组件
 class NodeListPanel extends StatefulWidget {
@@ -66,12 +67,16 @@ class _NodeListPanelState extends State<NodeListPanel> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        '节点列表',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white.withValues(alpha: 0.87),
+                      Flexible(
+                        child: Text(
+                          AppLocalizations.of(context)!.nodeList,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withValues(alpha: 0.87),
+                          ),
                         ),
                       ),
                     ],
@@ -236,8 +241,8 @@ class _NodeListPanelState extends State<NodeListPanel> {
                                         color: Colors.white.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: const Text(
-                                        '未测试',
+                                      child: Text(
+                                        AppLocalizations.of(context)!.untested,
                                         style: TextStyle(
                                           color: Colors.white54,
                                           fontSize: 12,

@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../l10n/generated/app_localizations.dart';
 
 class GlassNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -40,9 +41,9 @@ class GlassNavBar extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildItem(context, 0, Icons.dashboard_rounded, '连接'),
-                _buildItem(context, 1, Icons.layers_rounded, '订阅'),
-                _buildItem(context, 2, Icons.person_rounded, '账户'),
+                _buildItem(context, 0, Icons.dashboard_rounded, AppLocalizations.of(context)!.connect),
+                _buildItem(context, 1, Icons.layers_rounded, AppLocalizations.of(context)!.subscription),
+                _buildItem(context, 2, Icons.person_rounded, AppLocalizations.of(context)!.profile),
               ],
             ),
           ),

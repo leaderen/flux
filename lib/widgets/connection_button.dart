@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'flux_loader.dart';
+import '../l10n/generated/app_localizations.dart';
 
 enum ConnectionButtonStatus {
   disconnected,
@@ -36,16 +37,18 @@ class ConnectionButton extends StatelessWidget {
     }
   }
 
-  String get _statusText {
+  String _statusText(BuildContext context) {
     switch (status) {
       case ConnectionButtonStatus.connected:
-        return '已连接';
+        return AppLocalizations.of(context)!.connected;
       case ConnectionButtonStatus.connecting:
-        return '连接中...';
+        return '${AppLocalizations.of(context)!.connecting}...';
       case ConnectionButtonStatus.error:
-        return '错误';
+        return AppLocalizations.of(context)!.error;
       case ConnectionButtonStatus.disconnected:
-        return '未连接';
+        return AppLocalizations.of(context)!.disconnected;
+      default:
+        return AppLocalizations.of(context)!.disconnected;
     }
   }
 
@@ -152,7 +155,7 @@ class ConnectionButton extends StatelessWidget {
             ),
           ),
           child: Text(
-            _statusText,
+            _statusText(context),
             style: TextStyle(
               fontSize: 15,
               letterSpacing: 1.5,

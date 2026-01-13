@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/user_info.dart';
 import '../services/v2board_api.dart';
 import '../services/api_config.dart';
@@ -81,12 +82,12 @@ class _AccountScreenState extends State<AccountScreen> {
           final isAuthExpired = statusCode == 401 || statusCode == 403;
           String message = err is V2BoardApiException
               ? err.message
-              : '网络开小差了，请稍后重试';
+              : AppLocalizations.of(context)!.networkError;
           
           // 如果错误信息包含 "token is null"，提供更友好的提示
           if (message.toLowerCase().contains('token is null') || 
               message.toLowerCase().contains('token') && message.toLowerCase().contains('null')) {
-            message = '登录状态已过期，请重新登录';
+            message = AppLocalizations.of(context)!.tokenExpiredMsg;
           }
 
           return Center(
@@ -117,7 +118,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         onPressed: () => setState(() {
                           _accountFuture = _loadAccount();
                         }),
-                        child: const Text('重试'),
+                        child: Text(AppLocalizations.of(context)!.retry),
                       ),
                       if (isAuthExpired) ...[
                         const SizedBox(width: 12),
@@ -129,7 +130,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.accent,
                           ),
-                          child: const Text('重新登录'),
+                          child: Text(AppLocalizations.of(context)!.login),
                         ),
                       ],
                     ],
@@ -157,7 +158,7 @@ class _AccountScreenState extends State<AccountScreen> {
         return StaggeredList(
           padding: const EdgeInsets.all(20),
           children: [
-            SectionHeader(title: '连接状态'),
+            SectionHeader(title: AppLocalizations.of(context)!.connectionStatus),
             const SizedBox(height: 16),
             AnimatedCard(
               padding: const EdgeInsets.all(16),
@@ -190,7 +191,7 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
             
             const SizedBox(height: 24),
-            SectionHeader(title: '我的订阅'),
+            SectionHeader(title: AppLocalizations.of(context)!.subscription),
             const SizedBox(height: 16),
             AnimatedCard(
               padding: const EdgeInsets.all(16),
@@ -212,7 +213,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                            Text(
-                             subInfo['plan'] != null ? (subInfo['plan']['name'] ?? '未知套餐') : '无订阅',
+                             subInfo['plan'] != null ? (subInfo['plan']['name'] ?? AppLocalizations.of(context)!.unknownPlan) : AppLocalizations.of(context)!.noSubscription,
                              style: const TextStyle(
                                color: AppColors.textPrimary,
                                fontWeight: FontWeight.bold,
@@ -221,7 +222,7 @@ class _AccountScreenState extends State<AccountScreen> {
                            ),
                            if (subInfo['expired_at'] != null)
                              Text(
-                               '有效期至: ${Formatters.formatEpoch(subInfo['expired_at'])}',
+                               '${AppLocalizations.of(context)!.expireDate}: ${Formatters.formatEpoch(subInfo['expired_at'])}',
                                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                              ),
                         ],
@@ -244,11 +245,11 @@ class _AccountScreenState extends State<AccountScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                        Text(
-                         '已用: ${Formatters.formatBytes(used)}',
+                         '${AppLocalizations.of(context)!.usedTraffic}: ${Formatters.formatBytes(used)}',
                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                        ),
                        Text(
-                         '总量: ${Formatters.formatBytes(total)}',
+                         '${AppLocalizations.of(context)!.totalTraffic}: ${Formatters.formatBytes(total)}',
                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                        ),
                     ],
@@ -266,7 +267,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           Icon(Icons.refresh, size: 16, color: AppColors.accentWarm),
                           const SizedBox(width: 8),
                           Text(
-                            '每月 ${subInfo['reset_day']} 日重置流量',
+                            '${AppLocalizations.of(context)!.trafficResetInfo} ${subInfo['reset_day']}',
                             style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                           ),
                         ],
@@ -277,16 +278,16 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
 
             const SizedBox(height: 24),
-            SectionHeader(title: '基本资料'),
+            SectionHeader(title: AppLocalizations.of(context)!.basicInfo),
             const SizedBox(height: 16),
             AnimatedCard(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   _buildInfoRow(context, Icons.email, '邮箱', user.email),
+                   _buildInfoRow(context, Icons.email, AppLocalizations.of(context)!.email, user.email),
                    const SizedBox(height: 12),
-                   _buildInfoRow(context, Icons.account_balance_wallet, '余额', Formatters.formatCurrency(user.balance)),
+                   _buildInfoRow(context, Icons.account_balance_wallet, AppLocalizations.of(context)!.balance, Formatters.formatCurrency(user.balance)),
                 ],
               ),
             ),
@@ -300,21 +301,21 @@ class _AccountScreenState extends State<AccountScreen> {
                   _buildLinkRow(
                     context,
                     Icons.description_outlined,
-                    '服务条款',
+                    AppLocalizations.of(context)!.termsOfService,
                     () => _openUrl(''),
                   ),
                   const Divider(height: 24, color: AppColors.border),
                   _buildLinkRow(
                     context,
                     Icons.privacy_tip_outlined,
-                    '隐私协议',
+                    AppLocalizations.of(context)!.privacyPolicy,
                     () => _openUrl(''),
                   ),
                   const Divider(height: 24, color: AppColors.border),
                   _buildLinkRow(
                     context,
                     Icons.info_outline,
-                    '关于 Flux',
+                    '${AppLocalizations.of(context)!.about} Flux',
                     () => _showAboutDialog(context),
                   ),
                 ],
@@ -327,11 +328,11 @@ class _AccountScreenState extends State<AccountScreen> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
+                children: [
                   Icon(Icons.logout, color: AppColors.danger, size: 20),
                   SizedBox(width: 8),
                   Text(
-                    '退出登录',
+                    AppLocalizations.of(context)!.logout,
                     style: TextStyle(
                       color: AppColors.danger,
                       fontSize: 16,
@@ -344,7 +345,7 @@ class _AccountScreenState extends State<AccountScreen> {
             
             // 版本号
             const SizedBox(height: 24),
-            const Center(
+            Center(
               child: Text(
                 'Flux v1.0.0',
                 style: TextStyle(
@@ -435,24 +436,24 @@ class _AccountScreenState extends State<AccountScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Flux 是一款安全、快速的网络加速服务。',
+            Text(
+              AppLocalizations.of(context)!.aboutFluxDesc,
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: 20),
-            _buildAboutFeature(Icons.hub_rounded, 'IXP 接入', '极速分流优化'),
+            _buildAboutFeature(Icons.hub_rounded, AppLocalizations.of(context)!.ixpAccess, AppLocalizations.of(context)!.ixpAccessDesc),
             const SizedBox(height: 12),
-            _buildAboutFeature(Icons.speed_rounded, '高速稳定', '全球高速专线'),
+            _buildAboutFeature(Icons.speed_rounded, AppLocalizations.of(context)!.fastStable, AppLocalizations.of(context)!.fastStableDesc),
             const SizedBox(height: 12),
-            _buildAboutFeature(Icons.security_rounded, '安全无日志', '严控隐私安全'),
+            _buildAboutFeature(Icons.security_rounded, AppLocalizations.of(context)!.noLogs, AppLocalizations.of(context)!.noLogsDesc),
             const SizedBox(height: 12),
-            _buildAboutFeature(Icons.lock_rounded, '强力加密', 'AES-256 位加密'),
+            _buildAboutFeature(Icons.lock_rounded, AppLocalizations.of(context)!.secureEncryption, AppLocalizations.of(context)!.strongEncryptionDesc),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('关闭', style: TextStyle(color: AppColors.accent)),
+            child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(color: AppColors.accent)),
           ),
         ],
       ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/server_node.dart';
 import '../utils/node_utils.dart';
 import 'connection_button.dart' show ConnectionButtonStatus;
+import '../l10n/generated/app_localizations.dart';
 
 /// 主页连接视图 - 中心区域
 class HomeConnectionView extends StatefulWidget {
@@ -82,11 +83,11 @@ class _HomeConnectionViewState extends State<HomeConnectionView>
     final reduceMotion = MediaQuery.of(context).disableAnimations;
     final style = widget.isLoading &&
             widget.status == ConnectionButtonStatus.disconnected
-        ? const _StatusStyle(
-            accent: Color(0xFFB8C0CC),
-            action: '同步中',
+        ? _StatusStyle(
+            accent: const Color(0xFFB8C0CC),
+            action: AppLocalizations.of(context)!.syncing,
           )
-        : _statusStyle(widget.status);
+        : _statusStyle(context, widget.status);
     if (reduceMotion && _loopController.isAnimating) {
       _loopController.stop();
     } else if (!reduceMotion &&
@@ -109,7 +110,7 @@ class _HomeConnectionViewState extends State<HomeConnectionView>
           mainAxisSize: MainAxisSize.min,
           children: [
             Semantics(
-              label: _getStatusText(widget.status),
+              label: _getStatusText(context, widget.status),
               button: true,
               enabled: true,
               child: GestureDetector(
@@ -194,12 +195,11 @@ class _HomeConnectionViewState extends State<HomeConnectionView>
                                       begin: const Offset(0, 0.2),
                                       end: Offset.zero,
                                     ).animate(animation),
-                                    child: child,
-                                  ),
-                                ),
                                 child: Text(
                                   style.action,
                                   key: ValueKey(style.action),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -250,14 +250,18 @@ class _HomeConnectionViewState extends State<HomeConnectionView>
                                   color: Color(0xFFCDD2DB),
                                 ),
                                 const SizedBox(width: 8),
-                                Text(
-                                  NodeUtils.extractCountry(
-                                      widget.selectedNode!.name),
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFFD7DCE5),
-                                    letterSpacing: 0.2,
+                                Flexible(
+                                  child: Text(
+                                    NodeUtils.extractCountry(
+                                        widget.selectedNode!.name),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFFD7DCE5),
+                                      letterSpacing: 0.2,
+                                    ),
                                   ),
                                 ),
                                 if (widget.selectedNode!.latency != null) ...[
@@ -297,40 +301,40 @@ class _HomeConnectionViewState extends State<HomeConnectionView>
     );
   }
 
-  String _getStatusText(ConnectionButtonStatus status) {
+  String _getStatusText(BuildContext context, ConnectionButtonStatus status) {
     switch (status) {
       case ConnectionButtonStatus.connected:
-        return '已连接';
+        return AppLocalizations.of(context)!.connected;
       case ConnectionButtonStatus.connecting:
-        return '连接中...';
+        return '${AppLocalizations.of(context)!.connecting}...';
       case ConnectionButtonStatus.error:
-        return '连接失败';
+        return AppLocalizations.of(context)!.connectionFailed;
       default:
-        return '点击连接';
+        return AppLocalizations.of(context)!.clickToConnect;
     }
   }
 
-  _StatusStyle _statusStyle(ConnectionButtonStatus status) {
+  _StatusStyle _statusStyle(BuildContext context, ConnectionButtonStatus status) {
     switch (status) {
       case ConnectionButtonStatus.connected:
-        return const _StatusStyle(
-          accent: Color(0xFFB7C1CD),
-          action: '断开连接',
+        return _StatusStyle(
+          accent: const Color(0xFFB7C1CD),
+          action: AppLocalizations.of(context)!.disconnect,
         );
       case ConnectionButtonStatus.connecting:
-        return const _StatusStyle(
-          accent: Color(0xFF8FA3BF),
-          action: '连接中',
+        return _StatusStyle(
+          accent: const Color(0xFF8FA3BF),
+          action: AppLocalizations.of(context)!.connecting,
         );
       case ConnectionButtonStatus.error:
-        return const _StatusStyle(
-          accent: Color(0xFFC19A9A),
-          action: '重试',
+        return _StatusStyle(
+          accent: const Color(0xFFC19A9A),
+          action: AppLocalizations.of(context)!.retry,
         );
       default:
-        return const _StatusStyle(
-          accent: Color(0xFFAEB6C4),
-          action: '连接',
+        return _StatusStyle(
+          accent: const Color(0xFFAEB6C4),
+          action: AppLocalizations.of(context)!.connect,
         );
     }
   }

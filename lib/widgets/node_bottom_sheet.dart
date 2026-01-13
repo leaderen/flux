@@ -4,6 +4,7 @@ import '../models/server_node.dart';
 import '../utils/node_utils.dart';
 import '../theme/app_colors.dart';
 import '../widgets/gradient_card.dart';
+import '../l10n/generated/app_localizations.dart';
 
 /// 节点选择底部弹窗
 class NodeBottomSheet extends StatefulWidget {
@@ -85,14 +86,19 @@ class _NodeBottomSheetState extends State<NodeBottomSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '选择节点',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                Expanded(
+                  child: Text(
+                    AppLocalizations.of(context)!.selectNode,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
+                const SizedBox(width: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
@@ -101,7 +107,7 @@ class _NodeBottomSheetState extends State<NodeBottomSheet> {
                     border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
                   ),
                   child: Text(
-                    '${widget.nodes.length} 个可用',
+                    '${widget.nodes.length} ${AppLocalizations.of(context)!.nodesAvailable}',
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.accent,
@@ -208,8 +214,8 @@ class _NodeBottomSheetState extends State<NodeBottomSheet> {
           color: AppColors.surfaceAlt,
           borderRadius: BorderRadius.circular(6),
         ),
-        child: const Text(
-          '未测试',
+        child: Text(
+          AppLocalizations.of(context)!.untested,
           style: TextStyle(
             color: AppColors.textSecondary,
             fontSize: 11,

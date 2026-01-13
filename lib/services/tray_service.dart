@@ -17,6 +17,36 @@ class TrayService with TrayListener {
   VoidCallback? onShowWindow;
   VoidCallback? onQuit;
   
+  // Localized strings
+  String _strShow = 'Show Window';
+  String _strConnect = 'Connect';
+  String _strDisconnect = 'Disconnect';
+  String _strQuit = 'Quit';
+  String _strConnected = 'Connected';
+  String _strDisconnected = 'Disconnected';
+  
+  /// Update localized strings
+  Future<void> updateStrings({
+    required String show,
+    required String connect,
+    required String disconnect,
+    required String quit,
+    required String connected,
+    required String disconnected,
+  }) async {
+    _strShow = show;
+    _strConnect = connect;
+    _strDisconnect = disconnect;
+    _strQuit = quit;
+    _strConnected = connected;
+    _strDisconnected = disconnected;
+    
+    if (_isInitialized) {
+      await _updateTrayIcon();
+      await _updateTrayMenu();
+    }
+  }
+  
   bool _isConnected = false;
   bool _isInitialized = false;
   
@@ -109,7 +139,7 @@ class TrayService with TrayListener {
            trayManager.setIcon(iconPath!);
         });
       }
-      await trayManager.setToolTip('Flux VPN - ${_isConnected ? "已连接" : "未连接"}');
+      await trayManager.setToolTip('Flux VPN - ${_isConnected ? _strConnected : _strDisconnected}');
     } catch (e) {
       debugPrint('[Tray] Set icon error: $e');
     }
@@ -147,17 +177,17 @@ class TrayService with TrayListener {
       items: [
         MenuItem(
           key: 'show',
-          label: '显示主窗口',
+          label: _strShow,
         ),
         MenuItem.separator(),
         MenuItem(
           key: _isConnected ? 'disconnect' : 'connect',
-          label: _isConnected ? '断开连接' : '快速连接',
+          label: _isConnected ? _strDisconnect : _strConnect,
         ),
         MenuItem.separator(),
         MenuItem(
           key: 'quit',
-          label: '退出',
+          label: _strQuit,
         ),
       ],
     );

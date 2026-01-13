@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../services/api_config.dart';
 import '../services/v2board_api.dart';
 import '../theme/app_colors.dart';
@@ -191,10 +192,10 @@ class _AuthScreenState extends State<AuthScreen>
         _emailController.text,
         recaptchaData: _recaptchaController.text,
       );
-      setState(() => _message = '验证码已发送');
+      setState(() => _message = AppLocalizations.of(context)!.success);
     } catch (e) {
       final msg = e is V2BoardApiException ? e.message : e.toString();
-      setState(() => _message = '发送失败: $msg');
+      setState(() => _message = '${AppLocalizations.of(context)!.error}: $msg');
     }
   }
 
@@ -295,10 +296,10 @@ class _AuthScreenState extends State<AuthScreen>
                                     duration: const Duration(milliseconds: 300),
                                     child: Text(
                                       _mode == AuthMode.reset
-                                          ? '重置密码'
+                                          ? AppLocalizations.of(context)!.resetPassword
                                           : _mode == AuthMode.login
-                                              ? '欢迎回来'
-                                              : '创建账户',
+                                              ? AppLocalizations.of(context)!.welcomeBack
+                                              : AppLocalizations.of(context)!.createAccount,
                                       key: ValueKey(_mode),
                                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                             fontWeight: FontWeight.w700,
@@ -312,7 +313,7 @@ class _AuthScreenState extends State<AuthScreen>
                                   // Input Fields
                                   _buildTextField(
                                     controller: _emailController,
-                                    label: '邮箱',
+                                    label: AppLocalizations.of(context)!.email,
                                     icon: Icons.email_outlined,
                                     keyboardType: TextInputType.emailAddress,
                                   ),
@@ -320,7 +321,7 @@ class _AuthScreenState extends State<AuthScreen>
                                   if (_mode != AuthMode.login && _mode != AuthMode.reset) ...[
                                      _buildTextField(
                                       controller: _inviteController,
-                                      label: '邀请码 (选填)',
+                                      label: '${AppLocalizations.of(context)!.inviteCode} (${AppLocalizations.of(context)!.optional})',
                                       icon: Icons.card_giftcard,
                                     ),
                                     const SizedBox(height: 16),
@@ -328,12 +329,12 @@ class _AuthScreenState extends State<AuthScreen>
                                   if (_mode != AuthMode.login) ...[
                                     _buildTextField(
                                       controller: _emailCodeController,
-                                      label: '验证码',
+                                      label: AppLocalizations.of(context)!.verificationCode,
                                       icon: Icons.verified_user_outlined,
                                       suffix: TextButton(
                                         onPressed: _sendVerify,
                                         child: Text(
-                                          '发送验证码',
+                                          AppLocalizations.of(context)!.sendCode,
                                           style: TextStyle(color: AppColors.accent),
                                         ),
                                       ),
@@ -342,7 +343,7 @@ class _AuthScreenState extends State<AuthScreen>
                                      if (_mode == AuthMode.register) ...[
                                         _buildTextField(
                                           controller: _recaptchaController,
-                                          label: '人机验证 (选填)',
+                                          label: AppLocalizations.of(context)!.recaptchaOptional,
                                           icon: Icons.security,
                                         ),
                                         const SizedBox(height: 16),
@@ -350,7 +351,7 @@ class _AuthScreenState extends State<AuthScreen>
                                   ],
                                   _buildTextField(
                                     controller: _mode == AuthMode.reset ? _newPasswordController : _passwordController,
-                                    label: _mode == AuthMode.reset ? '新密码' : '密码',
+                                    label: _mode == AuthMode.reset ? AppLocalizations.of(context)!.newPassword : AppLocalizations.of(context)!.password,
                                     icon: Icons.lock_outline,
                                     obscureText: true,
                                   ),
@@ -389,10 +390,10 @@ class _AuthScreenState extends State<AuthScreen>
                                             )
                                           : Text(
                                               _mode == AuthMode.reset
-                                                  ? '重置密码'
+                                                  ? AppLocalizations.of(context)!.resetPassword
                                                   : _mode == AuthMode.login
-                                                      ? '立即登录'
-                                                      : '注册账户',
+                                                      ? AppLocalizations.of(context)!.login
+                                                      : AppLocalizations.of(context)!.register,
                                               style: const TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
@@ -414,7 +415,7 @@ class _AuthScreenState extends State<AuthScreen>
                               if (_mode == AuthMode.reset)
                                 TextButton(
                                   onPressed: () => setState(() => _mode = AuthMode.login),
-                                  child: const Text('返回登录'),
+                                  child: Text(AppLocalizations.of(context)!.backToLogin),
                                 )
                               else ...[
                                 TextButton(
@@ -422,7 +423,9 @@ class _AuthScreenState extends State<AuthScreen>
                                      _mode = _mode == AuthMode.login ? AuthMode.register : AuthMode.login;
                                   }),
                                   child: Text(
-                                    _mode == AuthMode.login ? '没有账号? 去注册' : '已有账号? 去登录',
+                                    _mode == AuthMode.login 
+                                        ? '${AppLocalizations.of(context)!.noAccount} ${AppLocalizations.of(context)!.register}' 
+                                        : '${AppLocalizations.of(context)!.hasAccount} ${AppLocalizations.of(context)!.login}',
                                     style: TextStyle(
                                       color: AppColors.accent.withValues(alpha: 0.8),
                                     ),
@@ -437,8 +440,8 @@ class _AuthScreenState extends State<AuthScreen>
                                   ),
                                   TextButton(
                                     onPressed: () => setState(() => _mode = AuthMode.reset),
-                                    child: const Text(
-                                      '忘记密码',
+                                    child: Text(
+                                      AppLocalizations.of(context)!.forgotPassword,
                                       style: TextStyle(color: AppColors.textSecondary),
                                     ),
                                   ),

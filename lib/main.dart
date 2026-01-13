@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'screens/auth_screen.dart';
 import 'screens/root_shell.dart';
 import 'services/api_config.dart';
@@ -67,6 +69,33 @@ class FluxApp extends StatelessWidget {
       title: 'Flux',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark(),
+      
+      // 本地化配置 / Localization configuration
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'),      // English
+        Locale('zh'),      // 简体中文
+        Locale('zh', 'TW'), // 繁體中文
+        Locale('ja'),      // 日本語
+        Locale('ko'),      // 한국어
+        Locale('ru'),      // Русский
+        Locale('hi'),      // हिन्दी
+        Locale('es'),      // Español
+        Locale('pt'),      // Português
+        Locale('fr'),      // Français
+        Locale('de'),      // Deutsch
+        Locale('ar'),      // العربية
+        Locale('tr'),      // Türkçe
+        Locale('vi'),      // Tiếng Việt
+        Locale('th'),      // ไทย
+        Locale('id'),      // Indonesia
+      ],
+      
       home: const AuthGate(),
     );
   }

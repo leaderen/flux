@@ -1,4 +1,6 @@
-﻿# Flux - Open Source V2Board Client
+﻿[English](README_EN.md) | 简体中文 | [繁體中文](README_TW.md) | [日本語](README_JA.md) | [한국어](README_KO.md) | [Русский](README_RU.md) | [हिन्दी](README_HI.md) | [Español](README_ES.md) | [Português](README_PT.md) | [Français](README_FR.md) | [Deutsch](README_DE.md) | [العربية](README_AR.md) | [Türkçe](README_TR.md) | [Tiếng Việt](README_VI.md) | [ไทย](README_TH.md) | [Indonesia](README_ID.md)
+
+# Flux - Open Source V2Board Client
 
 **Flux** 是一个完美适配 [V2Board](https://github.com/wyx2685/v2board) 的跨平台客户端。
 
@@ -42,6 +44,7 @@
 -   **多种协议**: 支持 VLESS, VMess, Trojan, Shadowsocks。
 -   **全平台支持**: Android, iOS, Windows, macOS, Linux 全覆盖。
 -   **开源透明**: 代码完全开源，安全可控，随时定制。
+-   **多语言支持**: 支持英语、简体中文、繁体中文、日语、韩语、俄语、西班牙语等多种语言。
 
 ---
 

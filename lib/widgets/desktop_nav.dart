@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../theme/app_colors.dart';
+import '../l10n/generated/app_localizations.dart';
 
 /// 桌面端侧边导航栏 - 增加毛玻璃效果
 class DesktopNav extends StatelessWidget {
@@ -67,17 +68,17 @@ class DesktopNav extends StatelessWidget {
           _buildNavItem(
             index: 0,
             icon: Icons.power_settings_new_rounded,
-            label: '连接控制',
+            label: AppLocalizations.of(context)!.connect,
           ),
           _buildNavItem(
             index: 1,
             icon: Icons.card_giftcard_rounded,
-            label: '订阅方案',
+            label: AppLocalizations.of(context)!.subscription,
           ),
           _buildNavItem(
             index: 2,
             icon: Icons.account_circle_outlined,
-            label: '账户信息',
+            label: AppLocalizations.of(context)!.profile,
           ),
           
           const Spacer(),

@@ -3,6 +3,7 @@ import '../models/plan.dart';
 import '../services/v2board_api.dart';
 import '../theme/app_colors.dart';
 import '../utils/formatters.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../widgets/animated_card.dart';
 import '../widgets/fade_in_widget.dart';
 import '../widgets/staggered_list.dart';
@@ -43,7 +44,7 @@ class _PlansScreenState extends State<PlansScreen> {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           final err = snapshot.error;
-          final message = err is V2BoardApiException ? err.message : '网络开小差了，请稍后重试';
+          final message = err is V2BoardApiException ? err.message : AppLocalizations.of(context)!.networkError;
           return Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -58,7 +59,7 @@ class _PlansScreenState extends State<PlansScreen> {
                   onPressed: () => setState(() {
                     _plansFuture = _loadPlans();
                   }),
-                  child: const Text('重试'),
+                  child: Text(AppLocalizations.of(context)!.retry),
                 ),
               ],
             ),
@@ -74,8 +75,8 @@ class _PlansScreenState extends State<PlansScreen> {
             FadeInWidget(
               delay: Duration.zero,
               child: SectionHeader(
-                title: '选择方案',
-                actionLabel: '刷新',
+                title: AppLocalizations.of(context)!.plan,
+                actionLabel: AppLocalizations.of(context)!.refresh,
                 onAction: () {
                   setState(() {
                     _plansFuture = _loadPlans();
@@ -92,9 +93,9 @@ class _PlansScreenState extends State<PlansScreen> {
                       ? plan.yearPrice! 
                       : (plan.onetimePrice ?? 0);
               final priceLabel = (plan.monthPrice ?? 0) > 0 
-                  ? '/月' 
+                  ? AppLocalizations.of(context)!.perMonth 
                   : (plan.yearPrice ?? 0) > 0 
-                      ? '/年' 
+                      ? AppLocalizations.of(context)!.perYear 
                       : '';
                       
               return Padding(
@@ -151,7 +152,7 @@ class _PlansScreenState extends State<PlansScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    plan.content ?? '全球优质节点接入',
+                                    plan.content ?? AppLocalizations.of(context)!.globalNodesAccess,
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.5),
                                       fontSize: 12,
@@ -224,8 +225,8 @@ class _PlansScreenState extends State<PlansScreen> {
                                   ),
                                 ],
                               ),
-                              child: const Text(
-                                '立即体验',
+                              child: Text(
+                                AppLocalizations.of(context)!.buyNow,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,

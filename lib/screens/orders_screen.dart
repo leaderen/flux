@@ -8,6 +8,7 @@ import '../widgets/glow_button.dart';
 import '../widgets/gradient_card.dart';
 import '../widgets/section_header.dart';
 import '../widgets/flux_loader.dart';
+import '../l10n/generated/app_localizations.dart';
 
 import 'order_success_screen.dart';
 
@@ -77,21 +78,21 @@ class _OrdersScreenState extends State<OrdersScreen> {
   String _periodLabel(String value) {
     switch (value) {
       case 'month_price':
-        return '按月';
+        return AppLocalizations.of(context)!.monthPrice;
       case 'quarter_price':
-        return '按季';
+        return AppLocalizations.of(context)!.quarterPrice;
       case 'half_year_price':
-        return '半年';
+        return AppLocalizations.of(context)!.halfYearPrice;
       case 'year_price':
-        return '按年';
+        return AppLocalizations.of(context)!.yearPrice;
       case 'two_year_price':
-        return '两年';
+        return AppLocalizations.of(context)!.twoYearPrice;
       case 'three_year_price':
-        return '三年';
+        return AppLocalizations.of(context)!.threeYearPrice;
       case 'onetime_price':
-        return '一次性';
+        return AppLocalizations.of(context)!.onetimePrice;
       case 'reset_price':
-        return '重置流量';
+        return AppLocalizations.of(context)!.resetPrice;
       default:
         return value;
     }
@@ -125,7 +126,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   Future<void> _createOrder() async {
     final plan = widget.selectedPlan;
     if (plan == null) {
-      setState(() => _message = '请先选择订阅方案');
+      setState(() => _message = AppLocalizations.of(context)!.selectPlanFirst);
       return;
     }
     setState(() {
@@ -142,7 +143,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
       final tradeNo = data['data']?.toString();
       if (tradeNo == null || tradeNo.isEmpty) {
         if (mounted) {
-          setState(() => _message = '创建订单失败：未返回订单号');
+          setState(() => _message = '${AppLocalizations.of(context)!.orderCreationFail}: ${AppLocalizations.of(context)!.noOrderId}');
         }
         return;
       }
@@ -158,7 +159,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         // 显示继续支付/取消订单对话框
         await _showUnpaidOrderDialog(unpaidTradeNo);
       } else if (mounted) {
-        setState(() => _message = '购买失败: $e');
+        setState(() => _message = '${AppLocalizations.of(context)!.purchaseFailed}: $e');
       }
     } finally {
       if (mounted) {
@@ -176,7 +177,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
       return match.group(1);
     }
     // 如果包含"待支付"或"未支付"关键词，但没有订单号，返回 placeholder
-    if (errorMsg.contains('待支付') || errorMsg.contains('未支付') || errorMsg.contains('unpaid')) {
+    if (errorMsg.contains(AppLocalizations.of(context)!.unpaidOrder) || errorMsg.contains(AppLocalizations.of(context)!.unpaidOrder) || errorMsg.contains('unpaid')) {
       return 'UNKNOWN';
     }
     return null;
@@ -192,28 +193,28 @@ class _OrdersScreenState extends State<OrdersScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          '存在未支付订单',
+        title: Text(
+          AppLocalizations.of(context)!.unpaidOrder,
           style: TextStyle(color: Colors.white, fontSize: 18),
         ),
         content: Text(
           isUnknown 
-            ? '您有一个未支付的订单。请选择继续支付或取消该订单。'
-            : '订单号: $tradeNo\n\n请选择继续支付或取消该订单。',
+            ? AppLocalizations.of(context)!.unpaidOrderMessage
+            : '${AppLocalizations.of(context)!.order}: $tradeNo\n\n${AppLocalizations.of(context)!.payment}...',
           style: TextStyle(color: Colors.white.withOpacity(0.8)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, 'cancel'),
             child: Text(
-              '取消订单',
+              AppLocalizations.of(context)!.cancelOrder,
               style: TextStyle(color: Colors.red.shade400),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, 'continue'),
-            child: const Text(
-              '继续支付',
+            child: Text(
+              AppLocalizations.of(context)!.continuePayment,
               style: TextStyle(color: AppColors.accent),
             ),
           ),
@@ -235,16 +236,16 @@ class _OrdersScreenState extends State<OrdersScreen> {
     if (!mounted) return;
     setState(() {
       _loading = true;
-      _message = '正在取消订单...';
+      _message = AppLocalizations.of(context)!.cancelingOrder;
     });
     try {
       await _api.cancelOrder(tradeNo);
       if (mounted) {
-        setState(() => _message = '订单已取消，请重新购买');
+        setState(() => _message = AppLocalizations.of(context)!.orderCanceled);
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _message = '取消订单失败: $e');
+        setState(() => _message = '${AppLocalizations.of(context)!.cancelOrder}失败: $e');
       }
     } finally {
       if (mounted) {
@@ -257,7 +258,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     if (!mounted) return;
     setState(() {
       _loading = true;
-      _message = '正在提交订单...';
+      _message = AppLocalizations.of(context)!.submittingOrder;
     });
     try {
       // 1. 提交支付请求
@@ -277,14 +278,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
          if (await canLaunchUrl(uri)) {
            await launchUrl(uri, mode: LaunchMode.externalApplication);
          } else {
-           throw Exception('无法打开支付链接: $data');
+           throw Exception('${AppLocalizations.of(context)!.cannotOpenPaymentLink}: $data');
          }
       } else {
         // 余额支付或其他同步支付方式
         final success = data == true || data == 1;
         if (!success) {
            // 检查 type，有些接口 type -1 表示错误
-           throw Exception('支付请求提交失败: ${result['message'] ?? '未知错误'}');
+           throw Exception('${AppLocalizations.of(context)!.paymentRequestFailed}: ${result['message'] ?? '未知错误'}');
         }
       }
 
@@ -294,7 +295,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-           _message = '支付异常: $e';
+           _message = '${AppLocalizations.of(context)!.paymentException}: $e';
            _loading = false;
         });
       }
@@ -306,7 +307,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
       _isPolling = true;
 
       if (mounted) {
-        setState(() => _message = '正在确认支付结果...');
+        setState(() => _message = AppLocalizations.of(context)!.confirmPaymentResult);
       }
 
       const maxRetries = 60; // 最多轮询 60 次
@@ -333,7 +334,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         if (mounted) {
           if (orderPaid) {
             setState(() {
-              _message = '订单开通成功！';
+              _message = AppLocalizations.of(context)!.orderSuccess;
             });
             if (mounted) {
               widget.onPaid?.call();
@@ -356,13 +357,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
             }
           } else {
             setState(() {
-              _message = '支付结果确认超时，请稍后在订单记录查看';
+              _message = AppLocalizations.of(context)!.paymentResultTimeout;
             });
           }
         }
       } catch (e) {
         if (mounted) {
-           setState(() => _message = '查询状态失败: $e');
+           setState(() => _message = '${AppLocalizations.of(context)!.queryStatusFailed}: $e');
         }
       } finally {
         _isPolling = false;
@@ -381,7 +382,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     });
     return Scaffold(
       appBar: AppBar(
-        title: const Text('支付'),
+        title: Text(AppLocalizations.of(context)!.payment),
       ),
       body: DecoratedBox(
         decoration: const BoxDecoration(gradient: AppColors.heroGlow),
@@ -391,7 +392,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
             if (snapshot.hasError) {
               final err = snapshot.error;
               final message =
-                  err is V2BoardApiException ? err.message : '网络开小差了，请稍后重试';
+                  err is V2BoardApiException ? err.message : AppLocalizations.of(context)!.networkErrorRetry;
               return Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -409,7 +410,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                           _loadMethodsData();
                         });
                       },
-                      child: const Text('重试'),
+                      child: Text(AppLocalizations.of(context)!.retry),
                     ),
                   ],
                 ),
@@ -426,7 +427,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
             return ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                SectionHeader(title: '订单与支付'),
+                SectionHeader(title: AppLocalizations.of(context)!.orderAndPay),
                 const SizedBox(height: 12),
                 if (widget.selectedPlan == null) ...[
                   GradientCard(
@@ -434,15 +435,15 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       children: [
                         const Icon(Icons.layers, color: AppColors.accent),
                         const SizedBox(width: 10),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            '先选择一个套餐再下单',
+                            AppLocalizations.of(context)!.selectPlanPrompt,
                             style: TextStyle(color: AppColors.textPrimary),
                           ),
                         ),
                         TextButton(
                           onPressed: widget.onPickPlan,
-                          child: const Text('去选择'),
+                          child: Text(AppLocalizations.of(context)!.goSelect),
                         ),
                       ],
                     ),
@@ -454,7 +455,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.selectedPlan?.name ?? '未选择订阅方案',
+                        widget.selectedPlan?.name ?? AppLocalizations.of(context)!.noPlanSelected,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 10),
@@ -472,17 +473,17 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         onChanged: (value) {
                           if (value != null) setState(() => _period = value);
                         },
-                        decoration: const InputDecoration(labelText: '订阅周期'),
+                        decoration: InputDecoration(labelText: AppLocalizations.of(context)!.subscriptionPeriod),
                       ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _couponController,
-                    decoration: const InputDecoration(labelText: '优惠券（可选）'),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.coupon),
                   ),
                   const SizedBox(height: 12),
                   Center(
                     child: GlowButton(
-                      label: '立即购买',
+                      label: AppLocalizations.of(context)!.buyNow,
                       onPressed: _loading ? null : _createOrder,
                       isLoading: _loading,
                       icon: Icons.shopping_cart_checkout,
@@ -493,7 +494,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
             ),
             if (methods.isNotEmpty) ...[
               const SizedBox(height: 18),
-              SectionHeader(title: '支付方式'),
+              SectionHeader(title: AppLocalizations.of(context)!.payMethod),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 12,

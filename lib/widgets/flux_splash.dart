@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_colors.dart';
+import '../l10n/generated/app_localizations.dart';
 
 /// 流体光晕启动动画 - 与原生 SplashActivity 效果一致
 class FluxSplash extends StatefulWidget {
@@ -146,9 +147,9 @@ class _FluxSplashState extends State<FluxSplash> with TickerProviderStateMixin {
                         alignment: Alignment.center,
                         children: [
                           // 基础文字
-                          const Text(
-                            'Flux',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.appTitle,
+                            style: const TextStyle(
                               fontFamily: 'Roboto',
                               fontSize: 52,
                               fontWeight: FontWeight.w300,
@@ -179,8 +180,8 @@ class _FluxSplashState extends State<FluxSplash> with TickerProviderStateMixin {
                                 },
                                 child: Opacity(
                                   opacity: 0.7 * math.sin(_shimmerController.value * math.pi),
-                                  child: const Text(
-                                    'Flux',
+                                  child: Text(
+                                    AppLocalizations.of(context)!.appTitle,
                                     style: TextStyle(
                                       fontFamily: 'Roboto',
                                       fontSize: 52,

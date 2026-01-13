@@ -3,6 +3,7 @@ import '../models/plan.dart';
 import '../theme/app_colors.dart';
 import '../widgets/glow_button.dart';
 import '../widgets/gradient_card.dart';
+import '../l10n/generated/app_localizations.dart';
 
 
 class OrderSuccessScreen extends StatelessWidget {
@@ -17,18 +18,18 @@ class OrderSuccessScreen extends StatelessWidget {
     required this.tradeNo,
   });
 
-  String _getPeriodLabel(String key) {
+  String _getPeriodLabel(BuildContext context, String key) {
     // 简单的映射，保持与 OrdersScreen 一致
     switch (key) {
-      case 'month_price': return '按月订阅';
-      case 'quarter_price': return '按季订阅';
-      case 'half_year_price': return '半年订阅';
-      case 'year_price': return '按年订阅';
-      case 'two_year_price': return '两年订阅';
-      case 'three_year_price': return '三年订阅';
-      case 'onetime_price': return '一次性';
-      case 'reset_price': return '重置流量包';
-      default: return '订阅服务的';
+      case 'month_price': return AppLocalizations.of(context)!.monthPrice;
+      case 'quarter_price': return AppLocalizations.of(context)!.quarterPrice;
+      case 'half_year_price': return AppLocalizations.of(context)!.halfYearPrice;
+      case 'year_price': return AppLocalizations.of(context)!.yearPrice;
+      case 'two_year_price': return AppLocalizations.of(context)!.twoYearPrice;
+      case 'three_year_price': return AppLocalizations.of(context)!.threeYearPrice;
+      case 'onetime_price': return AppLocalizations.of(context)!.onetimePrice;
+      case 'reset_price': return AppLocalizations.of(context)!.resetPrice;
+      default: return AppLocalizations.of(context)!.subscription;
     }
   }
 
@@ -68,7 +69,7 @@ class OrderSuccessScreen extends StatelessWidget {
                           
                           // 标题
                           Text(
-                            '支付成功',
+                            AppLocalizations.of(context)!.orderSuccess,
                             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.bold,
@@ -76,7 +77,7 @@ class OrderSuccessScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '您的订阅服务已开通',
+                            AppLocalizations.of(context)!.yourSubscriptionActivated,
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -96,7 +97,7 @@ class OrderSuccessScreen extends StatelessWidget {
                                       const Icon(Icons.shopping_bag_outlined, color: AppColors.accent, size: 20),
                                       const SizedBox(width: 12),
                                       Text(
-                                        '产品信息',
+                                        AppLocalizations.of(context)!.productInfo,
                                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                           color: AppColors.textSecondary,
                                         ),
@@ -119,7 +120,7 @@ class OrderSuccessScreen extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
-                                      _getPeriodLabel(period),
+                                      _getPeriodLabel(context, period),
                                       style: const TextStyle(
                                         color: AppColors.accent,
                                         fontSize: 13,
@@ -128,9 +129,9 @@ class OrderSuccessScreen extends StatelessWidget {
                                     ),
                                   ),
                                   const Divider(height: 32, color: AppColors.border),
-                                  _buildRow('订单号', tradeNo),
+                                  _buildRow(AppLocalizations.of(context)!.order, tradeNo),
                                   const SizedBox(height: 12),
-                                  _buildRow('流量', '${plan.transferEnable} GB'),
+                                  _buildRow(AppLocalizations.of(context)!.traffic, '${plan.transferEnable} GB'),
                                 ],
                               ),
                             ),
@@ -141,7 +142,7 @@ class OrderSuccessScreen extends StatelessWidget {
                           
                           // 返回按钮
                           GlowButton(
-                            label: '开始使用',
+                            label: AppLocalizations.of(context)!.startUsing,
                             onPressed: () {
                               Navigator.of(context).pop(true); // 返回 true 表示刷新
                             },

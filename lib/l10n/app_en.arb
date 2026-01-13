@@ -1,0 +1,382 @@
+{
+  "@@locale": "en",
+  "appTitle": "Flux",
+  "@appTitle": {
+    "description": "App title"
+  },
+  "home": "Home",
+  "@home": {
+    "description": "Home tab"
+  },
+  "servers": "Servers",
+  "@servers": {
+    "description": "Servers tab"
+  },
+  "subscription": "Subscription",
+  "@subscription": {
+    "description": "Subscription tab"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings tab"
+  },
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile tab"
+  },
+  "connect": "Connect",
+  "@connect": {
+    "description": "Connect button"
+  },
+  "disconnect": "Disconnect",
+  "@disconnect": {
+    "description": "Disconnect button"
+  },
+  "connected": "Connected",
+  "@connected": {
+    "description": "Connected status"
+  },
+  "disconnected": "Disconnected",
+  "@disconnected": {
+    "description": "Disconnected status"
+  },
+  "connecting": "Connecting...",
+  "@connecting": {
+    "description": "Connecting status"
+  },
+  "selectServer": "Select a server",
+  "@selectServer": {
+    "description": "Select server prompt"
+  },
+  "noServers": "No servers available",
+  "@noServers": {
+    "description": "No servers message"
+  },
+  "updateSubscription": "Update Subscription",
+  "@updateSubscription": {
+    "description": "Update subscription button"
+  },
+  "addSubscription": "Add Subscription",
+  "@addSubscription": {
+    "description": "Add subscription button"
+  },
+  "subscriptionUrl": "Subscription URL",
+  "@subscriptionUrl": {
+    "description": "Subscription URL field"
+  },
+  "enterSubscriptionUrl": "Enter subscription URL",
+  "@enterSubscriptionUrl": {
+    "description": "Subscription URL placeholder"
+  },
+  "update": "Update",
+  "@update": {
+    "description": "Update button"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button"
+  },
+  "confirm": "Confirm",
+  "@confirm": {
+    "description": "Confirm button"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Save button"
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Language setting"
+  },
+  "theme": "Theme",
+  "@theme": {
+    "description": "Theme setting"
+  },
+  "darkMode": "Dark Mode",
+  "@darkMode": {
+    "description": "Dark mode setting"
+  },
+  "lightMode": "Light Mode",
+  "@lightMode": {
+    "description": "Light mode setting"
+  },
+  "systemMode": "System",
+  "@systemMode": {
+    "description": "System theme mode"
+  },
+  "about": "About",
+  "@about": {
+    "description": "About section"
+  },
+  "version": "Version",
+  "@version": {
+    "description": "Version label"
+  },
+  "logout": "Logout",
+  "@logout": {
+    "description": "Logout button"
+  },
+  "login": "Login",
+  "@login": {
+    "description": "Login button"
+  },
+  "register": "Register",
+  "@register": {
+    "description": "Register button"
+  },
+  "email": "Email",
+  "@email": {
+    "description": "Email field"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Password field"
+  },
+  "forgotPassword": "Forgot Password?",
+  "@forgotPassword": {
+    "description": "Forgot password link"
+  },
+  "noAccount": "Don't have an account?",
+  "@noAccount": {
+    "description": "No account text"
+  },
+  "hasAccount": "Already have an account?",
+  "@hasAccount": {
+    "description": "Has account text"
+  },
+  "invite": "Invite",
+  "@invite": {
+    "description": "Invite section"
+  },
+  "inviteCode": "Invite Code",
+  "@inviteCode": {
+    "description": "Invite code field"
+  },
+  "copySuccess": "Copied to clipboard",
+  "@copySuccess": {
+    "description": "Copy success message"
+  },
+  "error": "Error",
+  "@error": {
+    "description": "Error title"
+  },
+  "success": "Success",
+  "@success": {
+    "description": "Success title"
+  },
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Loading message"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button"
+  },
+  "networkError": "Network error",
+  "@networkError": {
+    "description": "Network error message"
+  },
+  "serverError": "Server error",
+  "@serverError": {
+    "description": "Server error message"
+  },
+  "traffic": "Traffic",
+  "@traffic": {
+    "description": "Traffic label"
+  },
+  "upload": "Upload",
+  "@upload": {
+    "description": "Upload label"
+  },
+  "download": "Download",
+  "@download": {
+    "description": "Download label"
+  },
+  "expireDate": "Expire Date",
+  "@expireDate": {
+    "description": "Expire date label"
+  },
+  "plan": "Plan",
+  "@plan": {
+    "description": "Plan label"
+  },
+  "remainingTraffic": "Remaining Traffic",
+  "@remainingTraffic": {
+    "description": "Remaining traffic label"
+  },
+  "usedTraffic": "Used Traffic",
+  "@usedTraffic": {
+    "description": "Used traffic label"
+  },
+  "totalTraffic": "Total Traffic",
+  "@totalTraffic": {
+    "description": "Total traffic label"
+  },
+  "announcement": "Announcement",
+  "@announcement": {
+    "description": "Announcement title"
+  },
+  "maintenance": "Maintenance",
+  "@maintenance": {
+    "description": "Maintenance title"
+  },
+  "newVersion": "New Version Available",
+  "@newVersion": {
+    "description": "New version title"
+  },
+  "updateNow": "Update Now",
+  "@updateNow": {
+    "description": "Update now button"
+  },
+  "later": "Later",
+  "@later": {
+    "description": "Later button"
+  },
+  "forceUpdate": "This update is required",
+  "@forceUpdate": {
+    "description": "Force update message"
+  },
+  "telegram": "Telegram",
+  "@telegram": {
+    "description": "Telegram label"
+  },
+  "website": "Website",
+  "@website": {
+    "description": "Website label"
+  },
+  "support": "Support",
+  "@support": {
+    "description": "Support label"
+  },
+  "customerService": "Customer Service",
+  "@customerService": {
+    "description": "Customer service label"
+  },
+  "copyLink": "Copy Link",
+  "@copyLink": {
+    "description": "Copy link button"
+  },
+  "share": "Share",
+  "@share": {
+    "description": "Share button"
+  },
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Refresh button"
+  },
+  "allNodes": "All Nodes",
+  "@allNodes": {
+    "description": "All nodes label"
+  },
+  "recommended": "Recommended",
+  "@recommended": {
+    "description": "Recommended label"
+  },
+  "latency": "Latency",
+  "@latency": {
+    "description": "Latency label"
+  },
+  "testLatency": "Test Latency",
+  "@testLatency": {
+    "description": "Test latency button"
+  },
+  "protocol": "Protocol",
+  "@protocol": {
+    "description": "Protocol label"
+  },
+  "port": "Port",
+  "@port": {
+    "description": "Port label"
+  },
+  "address": "Address",
+  "@address": {
+    "description": "Address label"
+  },
+  "welcomeBack": "Welcome Back",
+  "createAccount": "Create Account",
+  "resetPassword": "Reset Password",
+  "verificationCode": "Verification Code",
+  "sendCode": "Send Code",
+  "optional": "Optional",
+  "newPassword": "New Password",
+  "backToLogin": "Back to Login",
+  "monthPrice": "Monthly",
+  "quarterPrice": "Quarterly",
+  "halfYearPrice": "Half Yearly",
+  "yearPrice": "Yearly",
+  "twoYearPrice": "2 Years",
+  "threeYearPrice": "3 Years",
+  "onetimePrice": "One-time",
+  "resetPrice": "Reset Traffic",
+  "selectPlanFirst": "Please select a plan first",
+  "orderCreationFail": "Order creation failed",
+  "continuePayment": "Continue Payment",
+  "cancelOrder": "Cancel Order",
+  "payment": "Payment",
+  "orderAndPay": "Order & Payment",
+  "payMethod": "Payment Method",
+  "selectPlanPrompt": "Select a plan first",
+  "goSelect": "Go Select",
+  "noPlanSelected": "No Plan Selected",
+  "subscriptionPeriod": "Subscription Period",
+  "coupon": "Coupon (Optional)",
+  "buyNow": "Buy Now",
+  "orderSuccess": "Order Successful!",
+  "confirmPaymentResult": "Checking payment result...",
+  "order": "Order",
+  "productInfo": "Product Info",
+  "startUsing": "Start Using",
+  "activated": "Activated",
+  "yourSubscriptionActivated": "Your subscription has been activated",
+  "secureEncryption": "Secure Encryption",
+  "fastConnection": "Fast Connection",
+  "privacyProtection": "Privacy Protection",
+  "globalNodes": "Global Nodes",
+  "purchaseFailed": "Purchase failed",
+  "unpaidOrder": "Unpaid Order",
+  "unpaidOrderMessage": "You have an unpaid order. Please continue or cancel.",
+  "cancelingOrder": "Canceling order...",
+  "orderCanceled": "Order canceled, please buy again",
+  "submittingOrder": "Submitting order...",
+  "cannotOpenPaymentLink": "Cannot open payment link",
+  "paymentRequestFailed": "Payment request failed",
+  "paymentException": "Payment exception",
+  "paymentResultTimeout": "Payment timeout, check history later",
+  "queryStatusFailed": "Status query failed",
+  "selectNode": "Select Node",
+  "nodesAvailable": "nodes available",
+  "untested": "Untested",
+  "syncing": "Syncing",
+  "clickToConnect": "Click to Connect",
+  "nodeList": "Node List",
+  "connectionFailed": "Connection Failed",
+  "termsOfService": "Terms of Service",
+  "privacyPolicy": "Privacy Policy",
+  "basicInfo": "Basic Info",
+  "unknownPlan": "Unknown Plan",
+  "noSubscription": "No Subscription",
+  "trafficResetInfo": "Traffic resets on day",
+  "balance": "Balance",
+  "secureNetworkConnection": "Secure Network Connection",
+  "aboutFluxDesc": "Flux is a secure, fast network acceleration service.",
+  "ixpAccess": "IXP Access",
+  "ixpAccessDesc": "High-speed traffic optimization",
+  "fastStable": "Fast & Stable",
+  "fastStableDesc": "Global high-speed dedicated lines",
+  "noLogs": "No Logs",
+  "noLogsDesc": "Strict privacy protection",
+  "strongEncryptionDesc": "AES-256 bit encryption",
+  "tokenExpiredMsg": "Login session expired, please login again",
+  "quit": "Quit",
+  "connectionStatus": "Connection Status",
+  "recaptchaOptional": "Recaptcha (Optional)",
+  "perMonth": "/Month",
+  "perYear": "/Year",
+  "networkErrorRetry": "Network error, please try again later",
+  "noOrderId": "No order ID returned",
+  "globalNodesAccess": "Global premium node access"
+}

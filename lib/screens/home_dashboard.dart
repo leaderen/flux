@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../l10n/generated/app_localizations.dart';
 
 class HomeDashboard extends StatefulWidget {
   final VoidCallback onConnectPressed;
@@ -12,7 +13,7 @@ class HomeDashboard extends StatefulWidget {
     required this.onConnectPressed,
     required this.isConnected,
     this.isConnecting = false,
-    this.statusMessage = '未连接',
+    this.statusMessage = '',
   });
 
   @override
@@ -90,10 +91,10 @@ class _HomeDashboardState extends State<HomeDashboard> {
           crossAxisSpacing: 16,
           childAspectRatio: 2.5,
           children: [
-            _buildFeatureTile(Icons.security, '安全加密'),
-            _buildFeatureTile(Icons.speed, '极速连接'),
-            _buildFeatureTile(Icons.lock_outline, '隐私保护'),
-            _buildFeatureTile(Icons.public, '全球节点'),
+            _buildFeatureTile(Icons.security, AppLocalizations.of(context)!.secureEncryption),
+            _buildFeatureTile(Icons.speed, AppLocalizations.of(context)!.fastConnection),
+            _buildFeatureTile(Icons.lock_outline, AppLocalizations.of(context)!.privacyProtection),
+            _buildFeatureTile(Icons.public, AppLocalizations.of(context)!.globalNodes),
           ],
         );
       },

@@ -1,53 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:flux/l10n/generated/app_localizations.dart';
 
-/// 应用顶部标题组件
 class AppHeader extends StatelessWidget {
   const AppHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ShaderMask(
-            shaderCallback: (bounds) => LinearGradient(
-              colors: [
-                Colors.white,
-                Colors.white.withValues(alpha: 0.8),
-              ],
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [Color(0xFF673AB7), Color(0xFF90CAF9)],
             ).createShader(bounds),
-            child: const Text(
-              'Flux',
-              style: TextStyle(
-                fontSize: 42,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.5,
+            child: Text(
+              AppLocalizations.of(context)!.appTitle,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
           ),
           const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 6,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: const Color(0xFF2C2C2E),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
-                width: 1,
-              ),
+              border: Border.all(color: Colors.white10),
             ),
-            child: const Text(
-              'Secure Network Connection',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 13,
-                letterSpacing: 0.5,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.security, size: 14, color: Color(0xFF90CAF9)),
+                const SizedBox(width: 8),
+                Text(
+                  AppLocalizations.of(context)!.secureEncryption,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -55,4 +52,3 @@ class AppHeader extends StatelessWidget {
     );
   }
 }
-
