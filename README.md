@@ -92,6 +92,83 @@ Flux 在不同平台上采用了最原生的系统级方案来接管网络流量
 
 ---
 
+## 🌐 OSS 远程配置 (域名下发)
+
+Flux 支持通过 OSS/CDN 下发远程配置，实现 **域名自动切换**、**版本更新通知**、**公告推送** 等功能。
+
+### 配置方法
+
+1. 将以下 JSON 配置文件上传到您的 OSS/CDN（如阿里云 OSS、Cloudflare R2、GitHub Raw 等）
+2. 在 `lib/services/remote_config_service.dart` 中配置 `_ossUrls` 列表
+
+### JSON 配置格式
+
+```json
+{
+  "config_version": 1,
+  "domains": [
+    "https://api1.example.com/api/v1",
+    "https://api2.example.com/api/v1",
+    "https://backup.example.com/api/v1"
+  ],
+  "backup_subscription": "https://backup-sub.example.com/sub",
+  
+  "announcement": {
+    "enabled": true,
+    "title": "系统公告",
+    "content": "春节期间正常服务，祝大家新年快乐！",
+    "type": "info"
+  },
+  
+  "maintenance": {
+    "enabled": false,
+    "message": "系统维护中，预计2小时后恢复"
+  },
+  
+  "update": {
+    "min_version": "1.0.0",
+    "latest": {
+      "android": { "version": "1.2.0", "url": "https://example.com/flux-1.2.0.apk", "force": false },
+      "ios": { "version": "1.2.0", "url": "https://apps.apple.com/app/id123456", "force": false },
+      "windows": { "version": "1.2.0", "url": "https://example.com/flux-1.2.0-win.zip", "force": false },
+      "macos": { "version": "1.2.0", "url": "https://example.com/flux-1.2.0-mac.dmg", "force": false },
+      "linux": { "version": "1.2.0", "url": "https://example.com/flux-1.2.0-linux.tar.gz", "force": false }
+    },
+    "changelog": "1. 新增 WireGuard 和 TUIC 协议支持\n2. 修复若干 bug"
+  },
+  
+  "contact": {
+    "telegram": "https://t.me/your_group",
+    "website": "https://yoursite.com"
+  },
+  
+  "features": {
+    "invite_enabled": true,
+    "purchase_enabled": true,
+    "ssr_enabled": false
+  },
+  
+  "recommended_nodes": ["香港01", "日本02"]
+}
+```
+
+### 字段说明
+
+| 字段 | 说明 |
+|------|------|
+| `config_version` | 配置版本号，用于判断是否需要更新缓存 |
+| `domains` | API 域名列表，按优先级排序，自动测试可用性 |
+| `backup_subscription` | 备用订阅地址 |
+| `announcement` | 公告配置，`type` 可选 `info`/`warning`/`error` |
+| `maintenance` | 维护模式，启用时阻止用户操作 |
+| `update` | 版本更新信息，`force: true` 表示强制更新 |
+| `min_version` | 最低支持版本，低于此版本强制更新 |
+| `contact` | 客服联系方式 |
+| `features` | 功能开关 |
+| `recommended_nodes` | 推荐节点名称列表 |
+
+---
+
 ### 💬 加入社区 / Community
 
 - **Telegram Group**: [https://t.me/+62Otr015kSs1YmNk](https://t.me/+62Otr015kSs1YmNk)

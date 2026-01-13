@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'remote_config_service.dart';
 
 class ApiConfig {
   static const _tokenKey = 'api_token';
@@ -7,9 +8,17 @@ class ApiConfig {
   static String? _tokenCache;
   static String? _authDataCache;
 
-  // TODO: Configure your API URL here
+  final RemoteConfigService _remoteConfig = RemoteConfigService();
+
+  /// 获取 API 基础 URL
+  /// 优先使用远程配置的域名，失败时回退到默认域名
   Future<String> getBaseUrl() async {
-    return 'YOUR_API_URL_HERE'; 
+    try {
+      return await _remoteConfig.getActiveDomain();
+    } catch (e) {
+      // 远程配置获取失败，返回默认域名
+      return 'YOUR_API_URL_HERE';
+    }
   }
 
   Future<String?> getToken() async {
@@ -64,3 +73,4 @@ class ApiConfig {
     _authDataCache = prefs.getString(_authDataKey);
   }
 }
+
