@@ -204,23 +204,103 @@ Future<String> getBaseUrl() async {
 
 为了确保应用能正常安装且不与他人冲突，请务必在以下文件中将默认的 `com.example.yourapp` 替换为您自己的 App ID (包名)，例如 `com.yourname.project`：
 
-*   **Android**:
-    *   文件: `android/app/build.gradle.kts`
-    *   修改项: `applicationId` 和 `namespace`
-*   **iOS**:
-    *   文件: `ios/Runner.xcodeproj/project.pbxproj`
-    *   修改项: `PRODUCT_BUNDLE_IDENTIFIER` (建议搜索并全部替换)
-*   **macOS**:
-    *   文件: `macos/Runner/Configs/AppInfo.xcconfig`
-    *   修改项: `PRODUCT_BUNDLE_IDENTIFIER`
-*   **Linux**:
-    *   文件: `linux/CMakeLists.txt`
-    *   修改项: `APPLICATION_ID`
-*   **Windows (MSIX打包配置)**:
-    *   文件: `pubspec.yaml`
-    *   修改项: `msix_config` 下的 `identity_name`
+| 平台 | 文件路径 | 修改项 |
+|------|---------|--------|
+| **Android** | `android/app/build.gradle.kts` | `applicationId` 和 `namespace` |
+| **Android** | `android/app/src/main/AndroidManifest.xml` | 检查 package 声明 |
+| **iOS** | `ios/Runner.xcodeproj/project.pbxproj` | `PRODUCT_BUNDLE_IDENTIFIER` (全局搜索替换) |
+| **macOS** | `macos/Runner/Configs/AppInfo.xcconfig` | `PRODUCT_BUNDLE_IDENTIFIER` |
+| **Linux** | `linux/CMakeLists.txt` | `APPLICATION_ID` |
+| **Windows** | `pubspec.yaml` | `msix_config` 下的 `identity_name` |
 
-### 4. 开始打包
+> ⚠️ **重要**: 修改 Android 包名后，还需要重命名 `android/app/src/main/kotlin/com/example/yourapp/` 目录结构以匹配新包名。
+
+---
+
+### 4. 修改应用名称
+
+| 平台 | 文件路径 | 修改项 |
+|------|---------|--------|
+| **Android** | `android/app/src/main/AndroidManifest.xml` | `android:label="您的应用名"` |
+| **iOS** | `ios/Runner/Info.plist` | `CFBundleDisplayName` |
+| **macOS** | `macos/Runner/Configs/AppInfo.xcconfig` | `PRODUCT_NAME` |
+| **Linux** | `linux/CMakeLists.txt` | `set(BINARY_NAME "您的应用名")` |
+| **Windows** | `windows/runner/Runner.rc` | `VALUE "ProductName"` 和 `VALUE "FileDescription"` |
+| **Windows** | `pubspec.yaml` | `msix_config` 下的 `display_name` |
+
+---
+
+### 5. 替换应用图标 🎨
+
+#### 方法一：使用 flutter_launcher_icons (推荐)
+
+1. 准备一张 **1024x1024** 的 PNG 图片（正方形，无透明背景更佳）
+2. 将图片放到 `assets/images/app_icon.png`
+3. 确保 `pubspec.yaml` 中已配置：
+   ```yaml
+   dev_dependencies:
+     flutter_launcher_icons: ^0.14.4
+
+   flutter_launcher_icons:
+     android: true
+     ios: true
+     image_path: "assets/images/app_icon.png"
+     # 移除 alpha 通道 (iOS 要求)
+     remove_alpha_ios: true
+   ```
+4. 运行命令：
+   ```bash
+   flutter pub run flutter_launcher_icons
+   ```
+
+#### 方法二：手动替换
+
+| 平台 | 图标位置 | 说明 |
+|------|---------|------|
+| **Android** | `android/app/src/main/res/mipmap-*/` | 替换所有尺寸的 `ic_launcher.png` |
+| **iOS** | `ios/Runner/Assets.xcassets/AppIcon.appiconset/` | 替换所有尺寸的图标文件 |
+| **macOS** | `macos/Runner/Assets.xcassets/AppIcon.appiconset/` | 同 iOS |
+| **Windows** | `windows/runner/resources/app_icon.ico` | 需要 `.ico` 格式 |
+| **Linux** | `assets/icons/app_icon.png` | 或配置 `linux/CMakeLists.txt` |
+
+> 💡 **提示**: 可使用 [https://icon.kitchen](https://icon.kitchen) 或 [https://appicon.co](https://appicon.co) 在线生成各平台所需的图标尺寸。
+
+---
+
+### 6. 其他个性化配置
+
+#### 修改启动页 (Splash Screen)
+
+| 平台 | 文件位置 | 说明 |
+|------|---------|------|
+| **Android** | `android/app/src/main/res/drawable/splash_icon.xml` | 启动图标 SVG |
+| **Android** | `android/app/src/main/res/values/colors.xml` | 启动页背景色 |
+| **iOS** | `ios/Runner/Assets.xcassets/LaunchImage.imageset/` | 启动图片 |
+| **iOS** | `ios/Runner/Base.lproj/LaunchScreen.storyboard` | 启动页布局 |
+
+#### 修改主题颜色
+
+文件: `lib/main.dart` 或 `lib/theme/` 目录
+```dart
+MaterialApp(
+  theme: ThemeData(
+    primarySwatch: Colors.blue,  // 改为您的品牌色
+    colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+  ),
+)
+```
+
+#### 修改 OSS 远程配置地址
+
+文件: `lib/services/remote_config_service.dart`
+```dart
+static const List<String> _ossUrls = [
+  'https://your-bucket.oss-cn-hangzhou.aliyuncs.com/config.json',
+  'https://cdn.example.com/config.json',
+];
+```
+
+### 7. 开始打包
 
 确保您已安装 Flutter 运行环境。
 
@@ -269,7 +349,24 @@ Future<String> getBaseUrl() async {
 
 ## 🔗 相关项目
 
+### 核心代理引擎
+-   [Xray-core](https://github.com/XTLS/Xray-core): 本项目使用的核心代理引擎。
+-   [V2Ray-core](https://github.com/v2fly/v2ray-core): 经典的代理内核。
+-   [Sing-box](https://github.com/SagerNet/sing-box): 通用代理平台。
+-   [Hysteria](https://github.com/apernet/hysteria): 强大的抗封锁代理协议。
+
+### 面板 & 管理
 -   [V2Board](https://github.com/wyx2685/v2board): 强大的 V2Ray 面板。
+
+### 工具 & 库
+-   [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel): 高性能 SOCKS5 隧道。
+-   [geoip](https://github.com/Loyalsoldier/geoip): GeoIP 数据库。
+-   [domain-list-community](https://github.com/v2fly/domain-list-community): 域名分流规则。
+
+### 其他客户端参考
+-   [v2rayNG](https://github.com/2dust/v2rayNG): Android V2Ray 客户端。
+-   [V2RayXS](https://github.com/tzmax/V2RayXS): macOS V2Ray 客户端。
+-   [NekoBox](https://github.com/MatsuriDayo/NekoBoxForAndroid): 多协议代理客户端。
 
 ---
 
